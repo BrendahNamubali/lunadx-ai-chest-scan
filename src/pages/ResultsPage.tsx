@@ -180,7 +180,16 @@ export default function ResultsPage() {
     doc.text("Recommended Next Steps", 20, sugStart);
     doc.setFontSize(10);
     scan.suggestions.forEach((s, i) => doc.text(`${i + 1}. ${s}`, 24, sugStart + 8 + i * 6));
-    const disclaimerY = sugStart + 8 + scan.suggestions.length * 6 + 14;
+    let notesY = sugStart + 8 + scan.suggestions.length * 6 + 10;
+    if (notes.trim()) {
+      doc.setFontSize(12);
+      doc.text("Doctor's Clinical Notes", 20, notesY);
+      doc.setFontSize(10);
+      const noteLines = doc.splitTextToSize(notes, 166);
+      doc.text(noteLines, 20, notesY + 8);
+      notesY = notesY + 8 + noteLines.length * 5 + 6;
+    }
+    const disclaimerY = notesY + 8;
     doc.setFontSize(8);
     doc.text(
       "Disclaimer: LunaDX is an AI-assisted screening tool. Results must be reviewed by a qualified healthcare professional.",

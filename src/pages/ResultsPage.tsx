@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert, ShieldCheck, ShieldMinus, TrendingUp, Stethoscope } from "lucide-react";
+import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert, ShieldCheck, ShieldMinus, TrendingUp, Stethoscope, FileText, Save, Pencil } from "lucide-react";
 import { motion } from "framer-motion";
-import { getScans, getCurrentUser, type ScanResult } from "@/lib/store";
+import { getScans, getCurrentUser, updateScanNotes, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
 import LungDiagram from "@/components/LungDiagram";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import jsPDF from "jspdf";
 
 /* ─── Risk Gauge ─────────────────────────────────────── */
@@ -135,6 +137,9 @@ export default function ResultsPage() {
   const user = getCurrentUser();
   const scan = useMemo(() => getScans().find((s) => s.id === scanId), [scanId]);
 
+  const [notes, setNotes] = useState(scan?.doctorNotes || "");
+  const [isEditing, setIsEditing] = useState(!scan?.doctorNotes);
+
   if (!scan)
     return (
       <div className="text-center py-20 text-muted-foreground">
@@ -175,7 +180,16 @@ export default function ResultsPage() {
     doc.text("Recommended Next Steps", 20, sugStart);
     doc.setFontSize(10);
     scan.suggestions.forEach((s, i) => doc.text(`${i + 1}. ${s}`, 24, sugStart + 8 + i * 6));
-    const disclaimerY = sugStart + 8 + scan.suggestions.length * 6 + 14;
+    let notesY = sugStart + 8 + scan.suggestions.length * 6 + 10;
+    if (notes.trim()) {
+      doc.setFontSize(12);
+      doc.text("Doctor's Clinical Notes", 20, notesY);
+      doc.setFontSize(10);
+      const noteLines = doc.splitTextToSize(notes, 166);
+      doc.text(noteLines, 20, notesY + 8);
+      notesY = notesY + 8 + noteLines.length * 5 + 6;
+    }
+    const disclaimerY = notesY + 8;
     doc.setFontSize(8);
     doc.text(
       "Disclaimer: LunaDX is an AI-assisted screening tool. Results must be reviewed by a qualified healthcare professional.",
@@ -338,6 +352,59 @@ export default function ResultsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Doctor Clinical Notes */}
+      <Card className="mt-5">
+        <CardContent className="pt-5 pb-5">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary" />
+            Doctor Notes / Clinical Interpretation
+          </h2>
+          {isEditing ? (
+            <div className="space-y-3">
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Enter your clinical observations, interpretations, and additional notes about this X-ray..."
+                className="min-h-[120px] text-sm"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    updateScanNotes(scan.id, notes);
+                    setIsEditing(false);
+                    toast.success("Clinical notes saved successfully");
+                  }}
+                >
+                  <Save className="w-4 h-4 mr-1" /> Save Notes
+                </Button>
+                {scan.doctorNotes && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setNotes(scan.doctorNotes || "");
+                      setIsEditing(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-muted/40 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                {notes || <span className="text-muted-foreground italic">No notes added yet.</span>}
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                <Pencil className="w-4 h-4 mr-1" /> Edit Notes
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Disclaimer */}
       <div className="mt-6 p-4 rounded-lg bg-warning/5 border border-warning/20 text-xs text-muted-foreground">

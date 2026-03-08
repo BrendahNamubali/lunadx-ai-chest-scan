@@ -23,6 +23,16 @@ export interface ScanResult {
   suggestions: string[];
   scanDate: string;
   doctorName: string;
+  doctorNotes?: string;
+}
+
+export function updateScanNotes(scanId: string, notes: string) {
+  const scans = getScans();
+  const idx = scans.findIndex((s) => s.id === scanId);
+  if (idx >= 0) {
+    scans[idx].doctorNotes = notes;
+    localStorage.setItem(SCANS_KEY, JSON.stringify(scans));
+  }
 }
 
 export interface User {

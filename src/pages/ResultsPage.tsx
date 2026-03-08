@@ -224,6 +224,66 @@ export default function ResultsPage() {
         </Button>
       </div>
 
+      {/* High Risk Clinical Alert */}
+      {isHighRiskAlert && !alertAcknowledged && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          className="mb-5 rounded-xl border-2 border-destructive/40 bg-destructive/8 p-5"
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
+              <Bell className="w-5 h-5 text-destructive" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-destructive flex items-center gap-2">
+                🚨 High Risk Screening Alert
+              </h3>
+              <p className="text-xs text-foreground mt-1">
+                {scan.tbRisk > 70 && scan.pneumoniaRisk > 70
+                  ? "Possible tuberculosis and pneumonia patterns detected."
+                  : scan.tbRisk > 70
+                  ? "Possible tuberculosis pattern detected."
+                  : "Possible pneumonia pattern detected."}
+              </p>
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-foreground mb-1.5">Suggested next steps:</p>
+                <ul className="space-y-1">
+                  {[
+                    "Perform sputum testing",
+                    "Consider GeneXpert MTB/RIF testing",
+                    "Refer for radiology review",
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-center gap-2 text-xs text-foreground">
+                      <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
+                      {step}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3 border-destructive/30 text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  setAlertAcknowledged(true);
+                  toast.success("Alert acknowledged");
+                }}
+              >
+                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Acknowledge Alert
+              </Button>
+            </div>
+            <button
+              onClick={() => setAlertAcknowledged(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+            >
+              <XCircle className="w-4 h-4" />
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Risk Banner */}
       <RiskBanner scan={scan} />
 

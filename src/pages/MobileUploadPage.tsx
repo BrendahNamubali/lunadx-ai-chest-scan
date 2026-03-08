@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Camera, Upload, FileImage, X, AlertTriangle, Loader2, Smartphone, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, savePatient, type ScanResult } from "@/lib/store";
+import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -29,6 +29,16 @@ export default function MobileUploadPage() {
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
   }, []);
+
+  if (!canUploadScans(user?.role)) {
+    return (
+      <div className="animate-fade-in max-w-lg mx-auto text-center py-20">
+        <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
+        <h1 className="text-xl font-bold text-foreground mb-2">Access Restricted</h1>
+        <p className="text-sm text-muted-foreground">Only Radiologists and Admins can upload scans.</p>
+      </div>
+    );
+  }
 
   const clearImage = () => {
     setImageFile(null);

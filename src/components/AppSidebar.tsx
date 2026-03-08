@@ -1,20 +1,21 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2 } from "lucide-react";
-import { getCurrentUser, logout } from "@/lib/store";
+import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2, Lock } from "lucide-react";
+import { getCurrentUser, logout, canUploadScans, canManageOrganization } from "@/lib/store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/patients", icon: Users, label: "Patients" },
-  { to: "/triage", icon: ClipboardList, label: "AI Triage Queue" },
-  { to: "/upload", icon: Upload, label: "Screenings" },
-  { to: "/analytics", icon: BarChart3, label: "Analytics" },
-  { to: "/demo", icon: FlaskConical, label: "Demo Cases" },
-  { to: "/history", icon: FileText, label: "Audit Logs" },
-  { to: "/organization", icon: Building2, label: "Organization" },
-  { to: "/billing", icon: CreditCard, label: "Billing" },
+const getNavItems = (role?: string) => [
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", allowed: true },
+  { to: "/patients", icon: Users, label: "Patients", allowed: true },
+  { to: "/triage", icon: ClipboardList, label: "AI Triage Queue", allowed: true },
+  { to: "/upload", icon: Upload, label: "Screenings", allowed: canUploadScans(role as any) },
+  { to: "/analytics", icon: BarChart3, label: "Analytics", allowed: true },
+  { to: "/demo", icon: FlaskConical, label: "Demo Cases", allowed: true },
+  { to: "/history", icon: FileText, label: "Audit Logs", allowed: true },
+  { to: "/organization", icon: Building2, label: "Organization", allowed: true },
+  { to: "/billing", icon: CreditCard, label: "Billing", allowed: canManageOrganization(role as any) },
 ];
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
@@ -43,26 +44,41 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            onClick={onNavClick}
-            className={({ isActive }) =>
-              `group flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary-foreground shadow-sm"
-                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/40"
-              }`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${isActive ? "text-sidebar-primary" : ""}`} />
-                <span>{item.label}</span>
-              </>
-            )}
-          </NavLink>
+        {getNavItems(user?.role).map((item) => (
+          item.allowed ? (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={onNavClick}
+              className={({ isActive }) =>
+                `group flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 ${
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-primary-foreground shadow-sm"
+                    : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/40"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${isActive ? "text-sidebar-primary" : ""}`} />
+                  <span>{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ) : (
+            <Tooltip key={item.to}>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-sidebar-foreground/30 cursor-not-allowed">
+                  <item.icon className="w-[18px] h-[18px] shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  <Lock className="w-3 h-3" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <p className="text-xs">Restricted to {item.to === "/billing" ? "Admins" : "Radiologists & Admins"}</p>
+              </TooltipContent>
+            </Tooltip>
+          )
         ))}
       </nav>
 

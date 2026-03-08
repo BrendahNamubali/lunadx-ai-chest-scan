@@ -5,7 +5,7 @@ import {
   TrendingUp, TrendingDown, Stethoscope, Eye, Minus,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { getCurrentUser, getPatients, getScans, getScanUsage } from "@/lib/store";
+import { getCurrentUser, getPatients, getScans, getScanUsage, canUploadScans } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -120,11 +120,13 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/upload">
-            <Button size="sm" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
-              <FileImage className="w-4 h-4 mr-2" /> New Scan
-            </Button>
-          </Link>
+          {canUploadScans(user?.role) && (
+            <Link to="/upload">
+              <Button size="sm" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
+                <FileImage className="w-4 h-4 mr-2" /> New Scan
+              </Button>
+            </Link>
+          )}
           <Link to="/demo">
             <Button variant="outline" size="sm">
               <Play className="w-3.5 h-3.5 mr-1" /> Demo Cases

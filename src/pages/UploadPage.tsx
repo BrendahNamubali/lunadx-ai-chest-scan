@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
-import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, savePatient, type ScanResult } from "@/lib/store";
+import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -114,6 +114,19 @@ export default function UploadPage() {
     setDragOver(false);
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   }, [handleFile]);
+
+  // Role-based access check (after all hooks)
+  if (!canUploadScans(user?.role)) {
+    return (
+      <div className="animate-fade-in max-w-2xl mx-auto text-center py-20">
+        <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
+        <h1 className="text-xl font-bold text-foreground mb-2">Access Restricted</h1>
+        <p className="text-sm text-muted-foreground mb-4">
+          Only Radiologists and Admins can upload and analyze X-rays. As a Clinician, you can view existing results in the <button onClick={() => navigate("/history")} className="text-primary hover:underline">scan history</button>.
+        </p>
+      </div>
+    );
+  }
 
   const clearImage = () => {
     setImageFile(null);

@@ -18,6 +18,7 @@ import MobileUploadPage from "./pages/MobileUploadPage";
 import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 import TriageQueuePage from "./pages/TriageQueuePage";
 import BillingPage from "./pages/BillingPage";
+import OrganizationPage from "./pages/OrganizationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

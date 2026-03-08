@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Upload, Brain, FileText, Users, Activity, ChevronRight, AlertTriangle } from "lucide-react";
-import demoVideo from "@/assets/demo-screening.mp4";
+import PrototypeDemo from "@/components/PrototypeDemo";
 
 const features = [
   {

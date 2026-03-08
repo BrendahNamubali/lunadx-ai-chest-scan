@@ -108,6 +108,14 @@ export default function DashboardPage() {
       <div className="mt-8 p-4 rounded-lg bg-warning/5 border border-warning/20 text-xs text-muted-foreground">
         <strong className="text-foreground">⚠ Disclaimer:</strong> LunaDX is an AI-assisted screening tool and does not provide definitive medical diagnoses. All results must be reviewed by a qualified healthcare professional.
       </div>
+
+      {/* Security Notice */}
+      <div className="mt-4 flex items-start gap-2.5 p-3 rounded-lg bg-muted/40 text-[11px] text-muted-foreground">
+        <Shield className="w-3.5 h-3.5 shrink-0 mt-0.5 text-primary" />
+        <p>
+          Patient data is securely stored using encrypted infrastructure and protected medical data practices. Backend powered by Supabase.
+        </p>
+      </div>
     </div>
   );
 }

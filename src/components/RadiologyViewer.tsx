@@ -158,13 +158,13 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                   <motion.div
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.6 }}
+                    animate={{ opacity: radiologyMode ? 0.85 : 0.6 }}
                     className="absolute w-32 h-36 rounded-full bg-gradient-radial from-destructive/40 to-transparent blur-2xl"
                     style={{ top: "25%", left: "30%" }}
                   />
                   <motion.div
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.4 }}
+                    animate={{ opacity: radiologyMode ? 0.7 : 0.4 }}
                     transition={{ delay: 0.15 }}
                     className="absolute w-24 h-28 rounded-full bg-gradient-radial from-warning/35 to-transparent blur-xl"
                     style={{ top: "35%", right: "28%" }}
@@ -172,7 +172,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
                   {scan.tbRisk > 60 && (
                     <motion.div
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.5 }}
+                      animate={{ opacity: radiologyMode ? 0.8 : 0.5 }}
                       transition={{ delay: 0.3 }}
                       className="absolute w-16 h-20 rounded-full bg-gradient-radial from-destructive/50 to-transparent blur-lg"
                       style={{ top: "20%", left: "40%" }}

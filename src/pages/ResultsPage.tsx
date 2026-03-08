@@ -13,73 +13,165 @@ import { toast } from "sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import jsPDF from "jspdf";
 
-/* ─── Risk Gauge ─────────────────────────────────────── */
-function RiskGauge({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) {
-  const riskColor =
-    value > 70 ? "hsl(0, 72%, 51%)" : value > 40 ? "hsl(38, 92%, 50%)" : "hsl(152, 55%, 42%)";
-  const riskBg =
-    value > 70 ? "bg-destructive/8" : value > 40 ? "bg-warning/8" : "bg-success/8";
-  const riskText =
-    value > 70 ? "text-destructive" : value > 40 ? "text-warning" : "text-success";
-  const riskLabel = value > 70 ? "High" : value > 40 ? "Moderate" : "Low";
+/* ─── Helpers ────────────────────────────────────────── */
+const getRiskColor = (v: number) => (v > 70 ? "text-destructive" : v > 40 ? "text-warning" : "text-success");
+const getRiskBg = (v: number) => (v > 70 ? "bg-destructive" : v > 40 ? "bg-warning" : "bg-success");
+const getRiskLabel = (v: number) => (v > 70 ? "High" : v > 40 ? "Moderate" : "Low");
+const getRiskHsl = (v: number) => (v > 70 ? "hsl(0,72%,51%)" : v > 40 ? "hsl(30,90%,50%)" : "hsl(142,60%,40%)");
+const getRiskBadgeCls = (v: number) =>
+  v > 70 ? "bg-destructive/15 text-destructive" : v > 40 ? "bg-warning/15 text-warning" : "bg-success/15 text-success";
 
-  // SVG arc for the semicircle gauge
-  const radius = 54;
-  const circumference = Math.PI * radius;
-  const progress = (value / 100) * circumference;
+/* ─── Circular Progress (TB) ─────────────────────────── */
+function CircularRisk({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) {
+  const r = 48;
+  const c = 2 * Math.PI * r;
+  const offset = c - (value / 100) * c;
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="stat-card flex flex-col items-center text-center"
+    >
+      <div className="flex items-center gap-1.5 mb-3">
+        <Icon className={`w-4 h-4 ${getRiskColor(value)}`} />
+        <span className="text-xs font-semibold text-foreground uppercase tracking-wide">{label}</span>
+      </div>
+      <div className="relative w-[120px] h-[120px]">
+        <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
+          <circle cx="60" cy="60" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="8" />
+          <motion.circle
+            cx="60" cy="60" r={r} fill="none"
+            stroke={getRiskHsl(value)}
+            strokeWidth="8" strokeLinecap="round"
+            strokeDasharray={c}
+            initial={{ strokeDashoffset: c }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className={`text-2xl font-bold ${getRiskColor(value)}`}>{value}%</span>
+          <span className="text-[9px] text-muted-foreground">{getRiskLabel(value)}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Horizontal Risk Bar (Pneumonia) ────────────────── */
+function HorizontalRiskBar({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -16 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.5, delay: 0.1 }}
+      className="stat-card"
+    >
+      <div className="flex items-center gap-1.5 mb-2">
+        <Icon className={`w-4 h-4 ${getRiskColor(value)}`} />
+        <span className="text-xs font-semibold text-foreground uppercase tracking-wide">{label}</span>
+      </div>
+      <div className="flex items-center gap-3 mb-1.5">
+        <span className={`text-3xl font-bold tabular-nums ${getRiskColor(value)}`}>{value}%</span>
+        <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${getRiskBadgeCls(value)}`}>
+          {getRiskLabel(value)} Risk
+        </span>
+      </div>
+      <div className="w-full h-3 rounded-full bg-muted overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
+          className={`h-full rounded-full ${getRiskBg(value)}`}
+        />
+      </div>
+      <div className="flex justify-between mt-1">
+        <span className="text-[9px] text-muted-foreground">0%</span>
+        <span className="text-[9px] text-muted-foreground">100%</span>
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── Gauge Meter (Abnormality) ──────────────────────── */
+function GaugeMeter({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) {
+  const r = 54;
+  const c = Math.PI * r; // semicircle
+  const progress = (value / 100) * c;
+  // Needle angle: 0% = -90deg, 100% = 90deg → value maps to -90 + value*1.8
+  const needleAngle = -90 + value * 1.8;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className={`stat-card flex flex-col items-center text-center ${riskBg}`}
+      transition={{ duration: 0.5, delay: 0.2 }}
+      className="stat-card flex flex-col items-center text-center"
     >
       <div className="flex items-center gap-1.5 mb-3">
-        <Icon className={`w-4 h-4 ${riskText}`} />
+        <Icon className={`w-4 h-4 ${getRiskColor(value)}`} />
         <span className="text-xs font-semibold text-foreground uppercase tracking-wide">{label}</span>
       </div>
-
-      <div className="relative w-[130px] h-[75px] mb-2">
-        <svg viewBox="0 0 130 75" className="w-full h-full">
-          {/* Background arc */}
-          <path
-            d="M 11 70 A 54 54 0 0 1 119 70"
-            fill="none"
-            stroke="hsl(var(--muted))"
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
-          {/* Value arc */}
+      <div className="relative w-[140px] h-[80px]">
+        <svg viewBox="0 0 140 80" className="w-full h-full">
+          {/* Colored background arcs: green, orange, red */}
+          <path d="M 16 75 A 54 54 0 0 1 70 21" fill="none" stroke="hsl(142,60%,40%)" strokeWidth="8" strokeLinecap="round" opacity="0.25" />
+          <path d="M 70 21 A 54 54 0 0 1 105 38" fill="none" stroke="hsl(30,90%,50%)" strokeWidth="8" opacity="0.25" />
+          <path d="M 105 38 A 54 54 0 0 1 124 75" fill="none" stroke="hsl(0,72%,51%)" strokeWidth="8" strokeLinecap="round" opacity="0.25" />
+          {/* Active arc */}
           <motion.path
-            d="M 11 70 A 54 54 0 0 1 119 70"
-            fill="none"
-            stroke={riskColor}
-            strokeWidth="8"
-            strokeLinecap="round"
-            strokeDasharray={`${circumference}`}
-            strokeDashoffset={circumference - progress}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset: circumference - progress }}
+            d="M 16 75 A 54 54 0 0 1 124 75"
+            fill="none" stroke={getRiskHsl(value)} strokeWidth="8" strokeLinecap="round"
+            strokeDasharray={c}
+            initial={{ strokeDashoffset: c }}
+            animate={{ strokeDashoffset: c - progress }}
             transition={{ duration: 1.2, ease: "easeOut" }}
           />
+          {/* Needle */}
+          <motion.line
+            x1="70" y1="75" x2="70" y2="30"
+            stroke="hsl(var(--foreground))" strokeWidth="2" strokeLinecap="round"
+            style={{ transformOrigin: "70px 75px" }}
+            initial={{ rotate: -90 }}
+            animate={{ rotate: needleAngle }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+          />
+          <circle cx="70" cy="75" r="4" fill="hsl(var(--foreground))" />
         </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
-          <span className={`text-2xl font-bold ${riskText}`}>{value}%</span>
+        <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center">
+          <span className={`text-2xl font-bold ${getRiskColor(value)}`}>{value}%</span>
         </div>
       </div>
-
-      <span
-        className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${
-          value > 70
-            ? "bg-destructive/15 text-destructive"
-            : value > 40
-            ? "bg-warning/15 text-warning"
-            : "bg-success/15 text-success"
-        }`}
-      >
-        {riskLabel} Risk
+      <span className={`text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full mt-1 ${getRiskBadgeCls(value)}`}>
+        {getRiskLabel(value)}
       </span>
+    </motion.div>
+  );
+}
+
+/* ─── Small Risk Gauge (secondary scores) ────────────── */
+function SmallGauge({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.3 }}
+      className="stat-card flex flex-col items-center text-center"
+    >
+      <div className="flex items-center gap-1.5 mb-2">
+        <Icon className={`w-3.5 h-3.5 ${getRiskColor(value)}`} />
+        <span className="text-[10px] font-semibold text-foreground uppercase tracking-wide">{label}</span>
+      </div>
+      <span className={`text-xl font-bold tabular-nums ${getRiskColor(value)}`}>{value}%</span>
+      <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden mt-2">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.4 }}
+          className={`h-full rounded-full ${getRiskBg(value)}`}
+        />
+      </div>
     </motion.div>
   );
 }
@@ -337,13 +429,16 @@ export default function ResultsPage() {
       {/* Risk Banner */}
       <RiskBanner scan={scan} />
 
-      {/* Risk Gauges */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-5">
-        <RiskGauge label="TB Probability" value={scan.tbRisk} icon={Activity} />
-        <RiskGauge label="Pneumonia" value={scan.pneumoniaRisk} icon={Stethoscope} />
-        <RiskGauge label="Lung Opacity" value={scan.lungOpacityRisk ?? 0} icon={Eye} />
-        <RiskGauge label="Pleural Effusion" value={scan.pleuralEffusionRisk ?? 0} icon={Droplets} />
-        <RiskGauge label="Lung Nodules" value={scan.lungNodulesRisk ?? 0} icon={CircleDot} />
+      {/* Risk Visualizations */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+        <CircularRisk label="TB Probability" value={scan.tbRisk} icon={Activity} />
+        <HorizontalRiskBar label="Pneumonia Risk" value={scan.pneumoniaRisk} icon={Stethoscope} />
+        <GaugeMeter label="Lung Abnormality" value={scan.abnormalityScore} icon={TrendingUp} />
+      </div>
+      <div className="grid grid-cols-3 gap-4 mt-4">
+        <SmallGauge label="Lung Opacity" value={scan.lungOpacityRisk ?? 0} icon={Eye} />
+        <SmallGauge label="Pleural Effusion" value={scan.pleuralEffusionRisk ?? 0} icon={Droplets} />
+        <SmallGauge label="Lung Nodules" value={scan.lungNodulesRisk ?? 0} icon={CircleDot} />
       </div>
 
       {/* Detected Lung Abnormalities */}

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ZoomIn, ZoomOut, RotateCcw, Layers, Activity, Stethoscope, BrainCircuit, ShieldAlert } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, Layers, Activity, Stethoscope, BrainCircuit, ShieldAlert, Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -20,6 +20,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showLungOutline, setShowLungOutline] = useState(false);
+  const [radiologyMode, setRadiologyMode] = useState(false);
 
   const zoomIn = () => setZoom((z) => Math.min(z + 0.25, 3));
   const zoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.5));
@@ -49,7 +50,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
   ];
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden bg-[hsl(220,20%,8%)]">
+    <div className={`rounded-xl border overflow-hidden transition-colors duration-300 ${radiologyMode ? "bg-[hsl(220,20%,5%)] border-white/10" : "bg-[hsl(220,20%,8%)] border-border"}`}>
       <div className="flex flex-col lg:flex-row">
         {/* Main Viewer Panel */}
         <div className="flex-1 relative">
@@ -87,8 +88,20 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
             </div>
           </div>
 
-          {/* Overlay Toggles */}
+          {/* Overlay & Mode Toggles */}
           <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+            {/* Radiology Mode Toggle */}
+            <button
+              onClick={() => setRadiologyMode((v) => !v)}
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg backdrop-blur-sm text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                radiologyMode
+                  ? "bg-accent/20 text-accent border border-accent/30"
+                  : "bg-black/50 text-white/70 hover:text-white"
+              }`}
+            >
+              {radiologyMode ? <Moon className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
+              {radiologyMode ? "Radiology" : "Light"}
+            </button>
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm">
               <Switch
                 id="heatmap"
@@ -131,7 +144,12 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
               <img
                 src={scan.imageUrl}
                 alt="Chest X-ray"
-                className="max-w-full max-h-full object-contain"
+                className="max-w-full max-h-full object-contain transition-all duration-300"
+                style={{
+                  filter: radiologyMode
+                    ? "contrast(1.4) brightness(1.15) saturate(0)"
+                    : "none",
+                }}
                 draggable={false}
               />
 
@@ -140,13 +158,13 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                   <motion.div
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.6 }}
+                    animate={{ opacity: radiologyMode ? 0.85 : 0.6 }}
                     className="absolute w-32 h-36 rounded-full bg-gradient-radial from-destructive/40 to-transparent blur-2xl"
                     style={{ top: "25%", left: "30%" }}
                   />
                   <motion.div
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.4 }}
+                    animate={{ opacity: radiologyMode ? 0.7 : 0.4 }}
                     transition={{ delay: 0.15 }}
                     className="absolute w-24 h-28 rounded-full bg-gradient-radial from-warning/35 to-transparent blur-xl"
                     style={{ top: "35%", right: "28%" }}
@@ -154,7 +172,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
                   {scan.tbRisk > 60 && (
                     <motion.div
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 0.5 }}
+                      animate={{ opacity: radiologyMode ? 0.8 : 0.5 }}
                       transition={{ delay: 0.3 }}
                       className="absolute w-16 h-20 rounded-full bg-gradient-radial from-destructive/50 to-transparent blur-lg"
                       style={{ top: "20%", left: "40%" }}
@@ -216,7 +234,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
         </div>
 
         {/* Side Panel */}
-        <div className="lg:w-56 border-t lg:border-t-0 lg:border-l border-white/10 bg-[hsl(220,20%,10%)] p-4 space-y-4">
+        <div className={`lg:w-56 border-t lg:border-t-0 lg:border-l border-white/10 p-4 space-y-4 transition-colors duration-300 ${radiologyMode ? "bg-[hsl(220,20%,3%)]" : "bg-[hsl(220,20%,10%)]"}`}>
           {/* Risk Classification */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">

@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2 } from "lucide-react";
+import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
-import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, type ScanResult } from "@/lib/store";
+import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, savePatient, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";

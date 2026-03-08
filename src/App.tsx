@@ -41,6 +41,7 @@ const App = () => (
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/demo" element={<DemoCasesPage />} />
             <Route path="/analytics" element={<AnalyticsDashboardPage />} />
+            <Route path="/triage" element={<TriageQueuePage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

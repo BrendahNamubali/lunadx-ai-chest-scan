@@ -220,9 +220,9 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="animate-fade-in max-w-2xl">
-      <h1 className="text-2xl font-bold text-foreground mb-1">Upload Chest X-Ray</h1>
-      <p className="text-sm text-muted-foreground mb-8">Select a patient and upload their chest X-ray for AI screening analysis.</p>
+    <div className="animate-fade-in max-w-2xl mx-auto">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Upload Chest X-Ray</h1>
+      <p className="text-sm text-muted-foreground mb-6 sm:mb-8">Select a patient and upload their chest X-ray for AI screening analysis.</p>
 
       <div className="space-y-6">
         {/* Patient Select */}

@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const user = getCurrentUser();
   const patients = getPatients();
   const scans = getScans();
-
+  const scanUsage = getScanUsage();
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
   const todayScans = scans.filter((s) => s.scanDate.slice(0, 10) === todayStr);

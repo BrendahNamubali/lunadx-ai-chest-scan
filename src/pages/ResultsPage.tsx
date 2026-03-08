@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert, ShieldCheck, ShieldMinus, TrendingUp, Stethoscope, FileText, Save, Pencil } from "lucide-react";
+import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert, ShieldCheck, ShieldMinus, TrendingUp, Stethoscope, FileText, Save, Pencil, Bell, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { getScans, getCurrentUser, updateScanNotes, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";

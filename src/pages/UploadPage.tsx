@@ -77,7 +77,16 @@ export default function UploadPage() {
   const patients = getPatients();
   const user = getCurrentUser();
 
-  // Role-based access check
+  const [patientId, setPatientId] = useState(searchParams.get("patientId") || "");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const [qualityChecks, setQualityChecks] = useState<QualityCheck[] | null>(null);
+  const [assessingQuality, setAssessingQuality] = useState(false);
+
+  // Role-based access check (after all hooks)
   if (!canUploadScans(user?.role)) {
     return (
       <div className="animate-fade-in max-w-2xl mx-auto text-center py-20">
@@ -89,15 +98,6 @@ export default function UploadPage() {
       </div>
     );
   }
-
-  const [patientId, setPatientId] = useState(searchParams.get("patientId") || "");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysisError, setAnalysisError] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [qualityChecks, setQualityChecks] = useState<QualityCheck[] | null>(null);
-  const [assessingQuality, setAssessingQuality] = useState(false);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;

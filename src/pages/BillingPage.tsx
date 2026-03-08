@@ -57,7 +57,7 @@ export default function BillingPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Billing & Subscription</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your plan and track scan usage</p>
+        <p className="text-sm text-muted-foreground mt-1">{org?.name ? `${org.name} · ` : ""}Manage your organization plan and scan usage</p>
       </div>
 
       {/* Current Plan Card */}

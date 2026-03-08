@@ -253,19 +253,36 @@ export default function UploadPage() {
               </button>
             </div>
           ) : (
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className={`mt-2 border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
-                dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-              }`}
-              onClick={() => document.getElementById("file-input")?.click()}
-            >
-              <Upload className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-sm font-medium text-foreground">Drop X-ray image here or click to browse</p>
-              <p className="text-xs text-muted-foreground mt-1">Supports JPG, PNG formats</p>
-              <input id="file-input" type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+            <div className="mt-2 space-y-3">
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
+                  dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                }`}
+                onClick={() => document.getElementById("file-input")?.click()}
+              >
+                <Upload className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground">Drop X-ray image here or click to browse</p>
+                <p className="text-xs text-muted-foreground mt-1">Supports JPG, PNG formats</p>
+                <input id="file-input" type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+              </div>
+
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                <span className="relative bg-background px-3 text-xs text-muted-foreground">or</span>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full h-12 border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50"
+                onClick={(e) => { e.stopPropagation(); handleTrySample(); }}
+                disabled={analyzing}
+              >
+                <FlaskConical className="w-4 h-4 mr-2 text-primary" />
+                <span className="text-sm font-medium">Try with Sample X-ray</span>
+              </Button>
             </div>
           )}
         </div>

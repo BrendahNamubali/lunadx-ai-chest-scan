@@ -1,6 +1,9 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Upload, History, LogOut, Shield } from "lucide-react";
+import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, X } from "lucide-react";
 import { getCurrentUser, logout } from "@/lib/store";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useState, useEffect } from "react";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -9,7 +12,7 @@ const navItems = [
   { to: "/history", icon: History, label: "Scan History" },
 ];
 
-export default function AppSidebar() {
+function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const user = getCurrentUser();
   const navigate = useNavigate();
 
@@ -19,7 +22,7 @@ export default function AppSidebar() {
   };
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-30">
+    <>
       {/* Logo */}
       <div className="p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
@@ -39,6 +42,7 @@ export default function AppSidebar() {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onNavClick}
             className={({ isActive }) =>
               `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
@@ -72,6 +76,46 @@ export default function AppSidebar() {
           Sign Out
         </button>
       </div>
+    </>
+  );
+}
+
+export default function AppSidebar() {
+  const isMobile = useIsMobile();
+  const [open, setOpen] = useState(false);
+
+  // Close sheet on route change
+  useEffect(() => {
+    setOpen(false);
+  }, []);
+
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile hamburger button */}
+        <button
+          onClick={() => setOpen(true)}
+          className="fixed top-4 left-4 z-40 w-10 h-10 rounded-lg bg-sidebar flex items-center justify-center shadow-lg"
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5 text-sidebar-primary-foreground" />
+        </button>
+
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetContent side="left" className="w-64 p-0 bg-sidebar border-sidebar-border [&>button]:hidden">
+            <SheetTitle className="sr-only">Navigation menu</SheetTitle>
+            <div className="h-full flex flex-col">
+              <SidebarContent onNavClick={() => setOpen(false)} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-30">
+      <SidebarContent />
     </aside>
   );
 }

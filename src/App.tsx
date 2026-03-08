@@ -11,6 +11,7 @@ import PatientsPage from "./pages/PatientsPage";
 import UploadPage from "./pages/UploadPage";
 import ResultsPage from "./pages/ResultsPage";
 import HistoryPage from "./pages/HistoryPage";
+import PatientRecordPage from "./pages/PatientRecordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

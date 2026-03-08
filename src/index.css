@@ -82,6 +82,17 @@
     @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm;
   }
   .stat-card {
-    @apply bg-card rounded-xl border border-border/60 shadow-sm p-5 transition-all duration-200 hover:shadow-md;
+    @apply bg-card rounded-xl border border-border/60 shadow-sm p-5 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
+}
+
+/* Global button hover lift */
+@layer components {
+  button:not(:disabled),
+  a[role="button"]:not(:disabled) {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
+  button:not(:disabled):active {
+    transform: scale(0.97);
   }
 }

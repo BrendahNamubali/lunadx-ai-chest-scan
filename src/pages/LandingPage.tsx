@@ -134,8 +134,24 @@ export default function LandingPage() {
 
       {/* How it works */}
       <section className="pb-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl font-bold text-center mb-4">How It Works</h2>
+          <p className="text-muted-foreground text-center max-w-xl mx-auto mb-10">
+            See the AI screening process in action — from X-ray upload to risk assessment in seconds.
+          </p>
+
+          {/* Demo Video */}
+          <div className="rounded-xl overflow-hidden border border-border shadow-lg mb-14">
+            <video
+              src={demoVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full aspect-video object-cover bg-black"
+            />
+          </div>
+
           <div className="grid sm:grid-cols-3 gap-8">
             {[
               { step: "1", title: "Register Patient", desc: "Create a patient profile with basic clinical information." },

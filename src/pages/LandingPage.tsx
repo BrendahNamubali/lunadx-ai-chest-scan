@@ -81,7 +81,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/login">
-              <Button size="lg" className="px-8">
+              <Button size="lg" className="px-8 cta-gradient text-cta-foreground border-0 hover:opacity-90">
                 Start Screening <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>

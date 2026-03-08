@@ -12,6 +12,7 @@ const navItems = [
   { to: "/mobile-upload", icon: Smartphone, label: "Mobile Upload" },
   { to: "/history", icon: History, label: "Scan History" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/triage", icon: ClipboardList, label: "Triage Queue" },
 ];
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {

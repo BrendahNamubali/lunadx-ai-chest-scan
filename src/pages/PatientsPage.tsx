@@ -44,7 +44,7 @@ export default function PatientsPage() {
           <h1 className="text-2xl font-bold text-foreground">Patients</h1>
           <p className="text-sm text-muted-foreground mt-1">{patients.length} registered patients</p>
         </div>
-        <Button onClick={openNew} className="medical-gradient text-primary-foreground border-0 hover:opacity-90">
+        <Button onClick={openNew} className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
           <Plus className="w-4 h-4 mr-2" /> Add Patient
         </Button>
       </div>

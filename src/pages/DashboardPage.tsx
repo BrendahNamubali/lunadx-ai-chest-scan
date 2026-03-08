@@ -110,9 +110,9 @@ export default function DashboardPage() {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
             Good {today.getHours() < 12 ? "morning" : "afternoon"}, {user?.name?.split(" ")[0]}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
@@ -121,7 +121,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link to="/upload">
-            <Button className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
+            <Button size="sm" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
               <FileImage className="w-4 h-4 mr-2" /> New Scan
             </Button>
           </Link>

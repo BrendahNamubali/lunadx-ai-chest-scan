@@ -220,22 +220,22 @@ export default function ResultsPage() {
   return (
     <div className="animate-fade-in max-w-4xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
           <Link to="/history">
             <Button variant="ghost" size="icon"><ArrowLeft className="w-4 h-4" /></Button>
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Screening Results</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-foreground">Screening Results</h1>
             <p className="text-xs text-muted-foreground">{scan.patientName} &middot; {new Date(scan.scanDate).toLocaleDateString()}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/report/${scan.id}`); toast.success("Link copied"); }} variant="outline" size="sm">
-            <Share2 className="w-4 h-4 mr-1" /> Share
+            <Share2 className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">Share</span>
           </Button>
           <Button onClick={exportPDF} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-1" /> PDF
+            <Download className="w-4 h-4 sm:mr-1" /> <span className="hidden sm:inline">PDF</span>
           </Button>
         </div>
       </div>

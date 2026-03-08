@@ -61,22 +61,22 @@ export default function PatientsPage() {
       ) : (
         <div className="grid gap-3">
           {filtered.map((p) => (
-            <Link key={p.id} to={`/patients/${p.id}`} className="stat-card flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+            <Link key={p.id} to={`/patients/${p.id}`} className="stat-card flex items-center justify-between gap-2 cursor-pointer hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary shrink-0">
                   {p.name.charAt(0)}
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.age}y &middot; {p.sex} &middot; ID: {p.hospitalId}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground truncate">{p.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{p.age}y &middot; {p.sex} &middot; ID: {p.hospitalId}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Link to={`/upload?patientId=${p.id}`}>
+              <div className="flex items-center gap-1 shrink-0">
+                <Link to={`/upload?patientId=${p.id}`} className="hidden sm:block">
                   <Button variant="ghost" size="icon" title="New Scan"><FileImage className="w-4 h-4" /></Button>
                 </Link>
-                <Button variant="ghost" size="icon" onClick={() => openEdit(p)} title="Edit"><Edit2 className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)} title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); openEdit(p); }} title="Edit"><Edit2 className="w-4 h-4" /></Button>
+                <Button variant="ghost" size="icon" onClick={(e) => { e.preventDefault(); handleDelete(p.id); }} title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
               </div>
             </Link>
           ))}

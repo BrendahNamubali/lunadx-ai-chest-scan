@@ -41,6 +41,9 @@ const DEMO_CASES: DemoCase[] = [
     scan: {
       tbRisk: 87,
       pneumoniaRisk: 22,
+      lungOpacityRisk: 74,
+      pleuralEffusionRisk: 18,
+      lungNodulesRisk: 45,
       abnormalityScore: 82,
       riskLevel: "High",
       findings: ["Cavitary lesion in left upper lobe", "Opacity detected in upper right lobe", "Miliary pattern observed"],

@@ -353,6 +353,59 @@ export default function ResultsPage() {
         </div>
       </div>
 
+      {/* Doctor Clinical Notes */}
+      <Card className="mt-5">
+        <CardContent className="pt-5 pb-5">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary" />
+            Doctor Notes / Clinical Interpretation
+          </h2>
+          {isEditing ? (
+            <div className="space-y-3">
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Enter your clinical observations, interpretations, and additional notes about this X-ray..."
+                className="min-h-[120px] text-sm"
+              />
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    updateScanNotes(scan.id, notes);
+                    setIsEditing(false);
+                    toast.success("Clinical notes saved successfully");
+                  }}
+                >
+                  <Save className="w-4 h-4 mr-1" /> Save Notes
+                </Button>
+                {scan.doctorNotes && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      setNotes(scan.doctorNotes || "");
+                      setIsEditing(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-3 rounded-lg bg-muted/40 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                {notes || <span className="text-muted-foreground italic">No notes added yet.</span>}
+              </div>
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                <Pencil className="w-4 h-4 mr-1" /> Edit Notes
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Disclaimer */}
       <div className="mt-6 p-4 rounded-lg bg-warning/5 border border-warning/20 text-xs text-muted-foreground">
         <strong className="text-foreground">⚠ Disclaimer:</strong> This is an AI-assisted screening

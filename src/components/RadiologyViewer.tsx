@@ -234,7 +234,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
         </div>
 
         {/* Side Panel */}
-        <div className="lg:w-56 border-t lg:border-t-0 lg:border-l border-white/10 bg-[hsl(220,20%,10%)] p-4 space-y-4">
+        <div className={`lg:w-56 border-t lg:border-t-0 lg:border-l border-white/10 p-4 space-y-4 transition-colors duration-300 ${radiologyMode ? "bg-[hsl(220,20%,3%)]" : "bg-[hsl(220,20%,10%)]"}`}>
           {/* Risk Classification */}
           <div>
             <div className="flex items-center gap-1.5 mb-2">

@@ -43,7 +43,7 @@ export default function PatientRecordPage() {
           </p>
         </div>
         <Link to={`/upload?patientId=${patient.id}`}>
-          <Button size="sm" className="medical-gradient text-primary-foreground border-0 hover:opacity-90">
+          <Button size="sm" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
             New Scan
           </Button>
         </Link>

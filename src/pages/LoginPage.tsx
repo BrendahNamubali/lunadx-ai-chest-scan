@@ -65,7 +65,7 @@ export default function LoginPage() {
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="mt-1.5" required />
             </div>
-            <Button type="submit" className="w-full medical-gradient text-primary-foreground border-0 hover:opacity-90">
+            <Button type="submit" className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90">
               Sign In
             </Button>
           </form>

@@ -268,7 +268,7 @@ export default function UploadPage() {
           )}
         </AnimatePresence>
 
-        <Button onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing || assessingQuality} className="w-full medical-gradient text-primary-foreground border-0 hover:opacity-90 h-12 text-sm">
+        <Button onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing || assessingQuality} className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm">
           {analyzing ? (
             <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Analyzing X-Ray...</span>
           ) : (

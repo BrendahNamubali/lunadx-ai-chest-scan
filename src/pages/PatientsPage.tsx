@@ -44,7 +44,7 @@ export default function PatientsPage() {
           <h1 className="text-2xl font-bold text-foreground">Patients</h1>
           <p className="text-sm text-muted-foreground mt-1">{patients.length} registered patients</p>
         </div>
-        <Button onClick={openNew} className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
+        <Button onClick={openNew} className="cta-gradient text-ctaund border-0 hover:opacity-90">
           <Plus className="w-4 h-4 mr-2" /> Add Patient
         </Button>
       </div>
@@ -103,7 +103,7 @@ export default function PatientsPage() {
             <div><Label>Hospital ID</Label><Input className="mt-1.5" value={form.hospitalId} onChange={(e) => setForm({ ...form, hospitalId: e.target.value })} /></div>
             <div><Label>Symptoms</Label><Textarea className="mt-1.5" rows={2} value={form.symptoms} onChange={(e) => setForm({ ...form, symptoms: e.target.value })} /></div>
             <div><Label>Visit Date</Label><Input className="mt-1.5" type="date" value={form.visitDate} onChange={(e) => setForm({ ...form, visitDate: e.target.value })} /></div>
-            <Button onClick={handleSave} className="w-full medical-gradient text-primary-foreground border-0 hover:opacity-90">{editing ? "Save Changes" : "Add Patient"}</Button>
+            <Button onClick={handleSave} className="w-full medical-cta-gradient text-ctaund border-0 hover:opacity-90">{editing ? "Save Changes" : "Add Patient"}</Button>
           </div>
         </DialogContent>
       </Dialog>

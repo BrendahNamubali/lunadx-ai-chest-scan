@@ -5,7 +5,7 @@ import {
   TrendingUp, TrendingDown, Stethoscope, Eye, Minus,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { getCurrentUser, getPatients, getScans } from "@/lib/store";
+import { getCurrentUser, getPatients, getScans, getScanUsage } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

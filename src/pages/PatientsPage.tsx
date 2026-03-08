@@ -39,12 +39,12 @@ export default function PatientsPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Patients</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Patients</h1>
           <p className="text-sm text-muted-foreground mt-1">{patients.length} registered patients</p>
         </div>
-        <Button onClick={openNew} className="cta-gradient text-ctaund border-0 hover:opacity-90">
+        <Button onClick={openNew} size="sm" className="cta-gradient text-cta-foreground border-0 hover:opacity-90 w-fit">
           <Plus className="w-4 h-4 mr-2" /> Add Patient
         </Button>
       </div>

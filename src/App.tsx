@@ -13,6 +13,7 @@ import ResultsPage from "./pages/ResultsPage";
 import HistoryPage from "./pages/HistoryPage";
 import PatientRecordPage from "./pages/PatientRecordPage";
 import DemoCasesPage from "./pages/DemoCasesPage";
+import SharedReportPage from "./pages/SharedReportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

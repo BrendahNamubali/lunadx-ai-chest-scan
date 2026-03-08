@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Camera, Upload, FileImage, X, AlertTriangle, Loader2, Smartphone } from "lucide-react";
+import { Camera, Upload, FileImage, X, AlertTriangle, Loader2, Smartphone, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, type ScanResult } from "@/lib/store";
+import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, savePatient, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -33,6 +33,59 @@ export default function MobileUploadPage() {
   const clearImage = () => {
     setImageFile(null);
     setPreview(null);
+  };
+
+  const handleTrySample = async () => {
+    setAnalyzing(true);
+    setAnalysisError(false);
+
+    const allPatients = getPatients();
+    let demoPatient = allPatients.find((p) => p.hospitalId === "SAMPLE-001");
+    if (!demoPatient) {
+      demoPatient = {
+        id: crypto.randomUUID(),
+        name: "Sample Patient",
+        age: 45,
+        sex: "Male" as const,
+        hospitalId: "SAMPLE-001",
+        symptoms: "Persistent cough, mild fever",
+        visitDate: new Date().toISOString().slice(0, 10),
+        createdAt: new Date().toISOString(),
+      };
+      savePatient(demoPatient);
+    }
+
+    try {
+      const aiResponse = await analyzeXray("/sample-xray.jpg");
+      const scan: ScanResult = {
+        id: crypto.randomUUID(),
+        patientId: demoPatient.id,
+        patientName: demoPatient.name,
+        imageUrl: "/sample-xray.jpg",
+        tbRisk: aiResponse.tb_probability,
+        pneumoniaRisk: aiResponse.pneumonia_probability,
+        lungOpacityRisk: 42,
+        pleuralEffusionRisk: 18,
+        lungNodulesRisk: 25,
+        abnormalityScore: Math.min(
+          Math.round(aiResponse.tb_probability * 0.3 + aiResponse.pneumonia_probability * 0.2 + 42 * 0.2 + 18 * 0.15 + 25 * 0.15),
+          100
+        ),
+        riskLevel: Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 70 ? "High" : Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 40 ? "Medium" : "Low",
+        findings: ["Opacity detected in upper right lobe", "Patchy consolidation in right middle lobe"],
+        suggestions: ["Recommend sputum AFB smear and culture", "Suggest CT scan for detailed evaluation", "Schedule follow-up imaging in 2 weeks"],
+        aiSummary: aiResponse.ai_summary,
+        heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
+        scanDate: new Date().toISOString(),
+        doctorName: user?.name || "Demo Doctor",
+      };
+      saveScan(scan);
+      setAnalyzing(false);
+      navigate(`/results/${scan.id}`);
+    } catch {
+      setAnalyzing(false);
+      setAnalysisError(true);
+    }
   };
 
   const handleAnalyze = async () => {
@@ -169,6 +222,21 @@ export default function MobileUploadPage() {
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
               />
+
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                <span className="relative bg-background px-3 text-xs text-muted-foreground">or</span>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full h-14 border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50"
+                onClick={handleTrySample}
+                disabled={analyzing}
+              >
+                <FlaskConical className="w-5 h-5 mr-2 text-primary" />
+                <span className="text-sm font-medium">Try with Sample X-ray</span>
+              </Button>
             </div>
           )}
         </div>

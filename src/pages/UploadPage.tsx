@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2 } from "lucide-react";
+import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
-import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, type ScanResult } from "@/lib/store";
+import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, savePatient, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -123,6 +123,61 @@ export default function UploadPage() {
 
   const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
 
+  const handleTrySample = async () => {
+    setAnalyzing(true);
+    setAnalysisError(false);
+
+    // Ensure demo patient exists
+    const allPatients = getPatients();
+    let demoPatient = allPatients.find((p) => p.hospitalId === "SAMPLE-001");
+    if (!demoPatient) {
+      demoPatient = {
+        id: crypto.randomUUID(),
+        name: "Sample Patient",
+        age: 45,
+        sex: "Male" as const,
+        hospitalId: "SAMPLE-001",
+        symptoms: "Persistent cough, mild fever",
+        visitDate: new Date().toISOString().slice(0, 10),
+        createdAt: new Date().toISOString(),
+      };
+      savePatient(demoPatient);
+    }
+
+    try {
+      const aiResponse = await analyzeXray("/sample-xray.jpg");
+
+      const scan: ScanResult = {
+        id: crypto.randomUUID(),
+        patientId: demoPatient.id,
+        patientName: demoPatient.name,
+        imageUrl: "/sample-xray.jpg",
+        tbRisk: aiResponse.tb_probability,
+        pneumoniaRisk: aiResponse.pneumonia_probability,
+        lungOpacityRisk: 42,
+        pleuralEffusionRisk: 18,
+        lungNodulesRisk: 25,
+        abnormalityScore: Math.min(
+          Math.round(aiResponse.tb_probability * 0.3 + aiResponse.pneumonia_probability * 0.2 + 42 * 0.2 + 18 * 0.15 + 25 * 0.15),
+          100
+        ),
+        riskLevel: Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 70 ? "High" : Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 40 ? "Medium" : "Low",
+        findings: ["Opacity detected in upper right lobe", "Patchy consolidation in right middle lobe"],
+        suggestions: ["Recommend sputum AFB smear and culture", "Suggest CT scan for detailed evaluation", "Schedule follow-up imaging in 2 weeks"],
+        aiSummary: aiResponse.ai_summary,
+        heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
+        scanDate: new Date().toISOString(),
+        doctorName: user?.name || "Demo Doctor",
+      };
+      saveScan(scan);
+      setAnalyzing(false);
+      navigate(`/results/${scan.id}`);
+    } catch {
+      setAnalyzing(false);
+      setAnalysisError(true);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!patientId || !imageFile) return;
     setAnalyzing(true);
@@ -198,19 +253,36 @@ export default function UploadPage() {
               </button>
             </div>
           ) : (
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={handleDrop}
-              className={`mt-2 border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
-                dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-              }`}
-              onClick={() => document.getElementById("file-input")?.click()}
-            >
-              <Upload className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-sm font-medium text-foreground">Drop X-ray image here or click to browse</p>
-              <p className="text-xs text-muted-foreground mt-1">Supports JPG, PNG formats</p>
-              <input id="file-input" type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+            <div className="mt-2 space-y-3">
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
+                  dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                }`}
+                onClick={() => document.getElementById("file-input")?.click()}
+              >
+                <Upload className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground">Drop X-ray image here or click to browse</p>
+                <p className="text-xs text-muted-foreground mt-1">Supports JPG, PNG formats</p>
+                <input id="file-input" type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+              </div>
+
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                <span className="relative bg-background px-3 text-xs text-muted-foreground">or</span>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full h-12 border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50"
+                onClick={(e) => { e.stopPropagation(); handleTrySample(); }}
+                disabled={analyzing}
+              >
+                <FlaskConical className="w-4 h-4 mr-2 text-primary" />
+                <span className="text-sm font-medium">Try with Sample X-ray</span>
+              </Button>
             </div>
           )}
         </div>

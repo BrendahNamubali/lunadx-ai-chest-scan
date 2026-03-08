@@ -17,6 +17,9 @@ export interface ScanResult {
   imageUrl: string;
   tbRisk: number;
   pneumoniaRisk: number;
+  lungOpacityRisk: number;
+  pleuralEffusionRisk: number;
+  lungNodulesRisk: number;
   abnormalityScore: number;
   riskLevel: "Low" | "Medium" | "High";
   findings: string[];
@@ -104,8 +107,11 @@ export function saveScan(scan: ScanResult) {
 export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName" | "imageUrl" | "scanDate" | "doctorName"> {
   const tbRisk = Math.round(Math.random() * 100);
   const pneumoniaRisk = Math.round(Math.random() * 100);
-  const abnormalityScore = Math.round((tbRisk * 0.5 + pneumoniaRisk * 0.3 + Math.random() * 20));
-  const maxRisk = Math.max(tbRisk, pneumoniaRisk);
+  const lungOpacityRisk = Math.round(Math.random() * 100);
+  const pleuralEffusionRisk = Math.round(Math.random() * 100);
+  const lungNodulesRisk = Math.round(Math.random() * 100);
+  const abnormalityScore = Math.round((tbRisk * 0.3 + pneumoniaRisk * 0.2 + lungOpacityRisk * 0.2 + pleuralEffusionRisk * 0.15 + lungNodulesRisk * 0.15));
+  const maxRisk = Math.max(tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk);
   const riskLevel: "Low" | "Medium" | "High" = maxRisk > 70 ? "High" : maxRisk > 40 ? "Medium" : "Low";
 
   const allFindings = [
@@ -133,5 +139,5 @@ export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName
   const findings = allFindings.sort(() => Math.random() - 0.5).slice(0, numFindings);
   const suggestions = allSuggestions.sort(() => Math.random() - 0.5).slice(0, numFindings + 1);
 
-  return { tbRisk, pneumoniaRisk, abnormalityScore: Math.min(abnormalityScore, 100), riskLevel, findings, suggestions };
+  return { tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk, abnormalityScore: Math.min(abnormalityScore, 100), riskLevel, findings, suggestions };
 }

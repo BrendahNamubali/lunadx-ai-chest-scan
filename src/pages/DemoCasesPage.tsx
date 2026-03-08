@@ -24,6 +24,9 @@ const DEMO_CASES: DemoCase[] = [
     scan: {
       tbRisk: 8,
       pneumoniaRisk: 5,
+      lungOpacityRisk: 4,
+      pleuralEffusionRisk: 3,
+      lungNodulesRisk: 6,
       abnormalityScore: 7,
       riskLevel: "Low",
       findings: ["No significant abnormalities detected", "Heart size within normal limits"],
@@ -38,6 +41,9 @@ const DEMO_CASES: DemoCase[] = [
     scan: {
       tbRisk: 87,
       pneumoniaRisk: 22,
+      lungOpacityRisk: 74,
+      pleuralEffusionRisk: 18,
+      lungNodulesRisk: 45,
       abnormalityScore: 82,
       riskLevel: "High",
       findings: ["Cavitary lesion in left upper lobe", "Opacity detected in upper right lobe", "Miliary pattern observed"],
@@ -52,6 +58,9 @@ const DEMO_CASES: DemoCase[] = [
     scan: {
       tbRisk: 15,
       pneumoniaRisk: 78,
+      lungOpacityRisk: 62,
+      pleuralEffusionRisk: 71,
+      lungNodulesRisk: 12,
       abnormalityScore: 71,
       riskLevel: "High",
       findings: ["Patchy consolidation in right middle lobe", "Pleural effusion suspected in left lower zone", "Bilateral hilar lymphadenopathy noted"],

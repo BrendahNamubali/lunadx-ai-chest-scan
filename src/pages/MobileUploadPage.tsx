@@ -222,6 +222,21 @@ export default function MobileUploadPage() {
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
               />
+
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                <span className="relative bg-background px-3 text-xs text-muted-foreground">or</span>
+              </div>
+
+              <Button
+                variant="outline"
+                className="w-full h-14 border-dashed border-primary/30 hover:bg-primary/5 hover:border-primary/50"
+                onClick={handleTrySample}
+                disabled={analyzing}
+              >
+                <FlaskConical className="w-5 h-5 mr-2 text-primary" />
+                <span className="text-sm font-medium">Try with Sample X-ray</span>
+              </Button>
             </div>
           )}
         </div>

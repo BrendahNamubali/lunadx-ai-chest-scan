@@ -116,7 +116,7 @@ export default function DashboardPage() {
             Good {today.getHours() < 12 ? "morning" : "afternoon"}, {user?.name?.split(" ")[0]}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            {user?.clinicName} · {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            {user?.orgName} · {today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
           </p>
         </div>
         <div className="flex items-center gap-2">

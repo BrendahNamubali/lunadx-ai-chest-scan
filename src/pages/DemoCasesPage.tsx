@@ -24,6 +24,9 @@ const DEMO_CASES: DemoCase[] = [
     scan: {
       tbRisk: 8,
       pneumoniaRisk: 5,
+      lungOpacityRisk: 4,
+      pleuralEffusionRisk: 3,
+      lungNodulesRisk: 6,
       abnormalityScore: 7,
       riskLevel: "Low",
       findings: ["No significant abnormalities detected", "Heart size within normal limits"],

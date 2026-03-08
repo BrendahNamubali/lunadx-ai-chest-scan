@@ -9,6 +9,7 @@ import { getCurrentUser, getPatients, getScans, getScanUsage } from "@/lib/store
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer,
   PieChart, Pie, Cell,

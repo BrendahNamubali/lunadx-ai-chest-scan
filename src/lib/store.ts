@@ -87,7 +87,7 @@ const USER_KEY = "lunadx_user";
 const DEMO_ORG: Organization = {
   id: "org-metro",
   name: "Metro Health Clinic",
-  location: "Nairobi, Kenya",
+  location: "Kampala, Uganda",
   adminEmail: "admin@lunadx.com",
   createdAt: new Date().toISOString(),
   scanLimit: 10,

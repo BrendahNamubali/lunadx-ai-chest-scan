@@ -159,7 +159,7 @@ export default function LoginPage() {
                     <Label htmlFor="location" className="flex items-center gap-1.5">
                       <MapPin className="w-3.5 h-3.5" /> Location
                     </Label>
-                    <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Nairobi, Kenya" className="mt-1.5" required />
+                    <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Kampala, Uganda" className="mt-1.5" required />
                   </div>
                   <div>
                     <Label htmlFor="admin-name" className="flex items-center gap-1.5">

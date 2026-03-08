@@ -1,20 +1,21 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2 } from "lucide-react";
-import { getCurrentUser, logout } from "@/lib/store";
+import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2, Lock } from "lucide-react";
+import { getCurrentUser, logout, canUploadScans, canManageOrganization } from "@/lib/store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/patients", icon: Users, label: "Patients" },
-  { to: "/triage", icon: ClipboardList, label: "AI Triage Queue" },
-  { to: "/upload", icon: Upload, label: "Screenings" },
-  { to: "/analytics", icon: BarChart3, label: "Analytics" },
-  { to: "/demo", icon: FlaskConical, label: "Demo Cases" },
-  { to: "/history", icon: FileText, label: "Audit Logs" },
-  { to: "/organization", icon: Building2, label: "Organization" },
-  { to: "/billing", icon: CreditCard, label: "Billing" },
+const getNavItems = (role?: string) => [
+  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", allowed: true },
+  { to: "/patients", icon: Users, label: "Patients", allowed: true },
+  { to: "/triage", icon: ClipboardList, label: "AI Triage Queue", allowed: true },
+  { to: "/upload", icon: Upload, label: "Screenings", allowed: canUploadScans(role as any) },
+  { to: "/analytics", icon: BarChart3, label: "Analytics", allowed: true },
+  { to: "/demo", icon: FlaskConical, label: "Demo Cases", allowed: true },
+  { to: "/history", icon: FileText, label: "Audit Logs", allowed: true },
+  { to: "/organization", icon: Building2, label: "Organization", allowed: true },
+  { to: "/billing", icon: CreditCard, label: "Billing", allowed: canManageOrganization(role as any) },
 ];
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {

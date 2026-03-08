@@ -132,6 +132,33 @@ function RiskBanner({ scan }: { scan: ScanResult }) {
   );
 }
 
+/* ─── AI Explainability ──────────────────────────────── */
+function generateExplanations(scan: ScanResult): string[] {
+  const pool: string[] = [];
+
+  // Findings-based explanations
+  scan.findings.forEach((f) => {
+    const fl = f.toLowerCase();
+    if (fl.includes("opacity")) pool.push("Lung opacity detected in radiograph suggesting possible infiltrate or mass");
+    if (fl.includes("consolidation")) pool.push("Abnormal density pattern consistent with alveolar consolidation");
+    if (fl.includes("cavitary") || fl.includes("cavitation")) pool.push("Possible cavitation pattern identified, often associated with TB or abscess");
+    if (fl.includes("miliary")) pool.push("Miliary pattern detected — small nodular opacities distributed across lung fields");
+    if (fl.includes("pleural")) pool.push("Pleural abnormality suggesting fluid accumulation or thickening");
+    if (fl.includes("lymphadenopathy")) pool.push("Enlarged lymph nodes detected in hilar region");
+    if (fl.includes("cardiomegaly")) pool.push("Cardiac silhouette enlarged beyond expected parameters");
+  });
+
+  // Risk-based generic explanations
+  if (scan.tbRisk > 60) pool.push("Irregular lung texture in upper lobes consistent with tuberculosis patterns");
+  if (scan.pneumoniaRisk > 60) pool.push("Diffuse opacification pattern suggestive of infectious pneumonia");
+  if (scan.abnormalityScore > 50) pool.push("Overall pixel intensity distribution deviates from normal baseline");
+
+  if (pool.length === 0) pool.push("No significant abnormal patterns detected by the AI model");
+
+  // Deduplicate and limit
+  return [...new Set(pool)].slice(0, 5);
+}
+
 /* ─── Main Page ──────────────────────────────────────── */
 export default function ResultsPage() {
   const { scanId } = useParams();

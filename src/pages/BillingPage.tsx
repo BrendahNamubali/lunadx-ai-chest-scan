@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Check, Zap, Building2, FlaskConical, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { getScanUsage } from "@/lib/store";
 
 const plans = [
   {
@@ -47,8 +48,7 @@ export default function BillingPage() {
   const [showUpgradeMsg, setShowUpgradeMsg] = useState(false);
 
   const currentPlan = "trial";
-  const scansUsed = 3;
-  const scansTotal = 10;
+  const { used: scansUsed, total: scansTotal, remaining: scansRemaining } = getScanUsage();
   const scansPercent = (scansUsed / scansTotal) * 100;
 
   return (
@@ -85,9 +85,9 @@ export default function BillingPage() {
                 {scansUsed} / {scansTotal} used
               </span>
             </div>
-            <Progress value={scansPercent} className="h-2.5" />
+            <Progress value={Math.min(scansPercent, 100)} className="h-2.5" />
             <p className="text-xs text-muted-foreground mt-1.5">
-              {scansTotal - scansUsed} scans remaining in your trial
+              {scansRemaining} scans remaining in your trial
             </p>
           </div>
         </CardContent>

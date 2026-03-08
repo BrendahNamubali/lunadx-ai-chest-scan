@@ -255,9 +255,22 @@ export default function ResultsPage() {
             </p>
           </div>
         </div>
-        <Button onClick={exportPDF} variant="outline" size="sm">
-          <Download className="w-4 h-4 mr-2" /> Export PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => {
+              const url = `${window.location.origin}/report/${scan.id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("Shareable report link copied to clipboard");
+            }}
+            variant="outline"
+            size="sm"
+          >
+            <Share2 className="w-4 h-4 mr-1" /> Share
+          </Button>
+          <Button onClick={exportPDF} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" /> Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* High Risk Clinical Alert */}

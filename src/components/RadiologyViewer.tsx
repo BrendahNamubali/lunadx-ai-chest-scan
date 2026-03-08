@@ -50,7 +50,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
   ];
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden bg-[hsl(220,20%,8%)]">
+    <div className={`rounded-xl border overflow-hidden transition-colors duration-300 ${radiologyMode ? "bg-[hsl(220,20%,5%)] border-white/10" : "bg-[hsl(220,20%,8%)] border-border"}`}>
       <div className="flex flex-col lg:flex-row">
         {/* Main Viewer Panel */}
         <div className="flex-1 relative">

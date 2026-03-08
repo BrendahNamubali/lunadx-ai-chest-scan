@@ -17,6 +17,9 @@ export interface ScanResult {
   imageUrl: string;
   tbRisk: number;
   pneumoniaRisk: number;
+  lungOpacityRisk: number;
+  pleuralEffusionRisk: number;
+  lungNodulesRisk: number;
   abnormalityScore: number;
   riskLevel: "Low" | "Medium" | "High";
   findings: string[];

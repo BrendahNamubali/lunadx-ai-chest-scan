@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert, ShieldCheck, ShieldMinus, TrendingUp, Stethoscope, FileText, Save, Pencil, Bell, XCircle, BrainCircuit, Info, Lightbulb } from "lucide-react";
+import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert, ShieldCheck, ShieldMinus, TrendingUp, Stethoscope, FileText, Save, Pencil, Bell, XCircle, BrainCircuit, Info, Lightbulb, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getScans, getCurrentUser, updateScanNotes, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
@@ -255,9 +255,22 @@ export default function ResultsPage() {
             </p>
           </div>
         </div>
-        <Button onClick={exportPDF} variant="outline" size="sm">
-          <Download className="w-4 h-4 mr-2" /> Export PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => {
+              const url = `${window.location.origin}/report/${scan.id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("Shareable report link copied to clipboard");
+            }}
+            variant="outline"
+            size="sm"
+          >
+            <Share2 className="w-4 h-4 mr-1" /> Share
+          </Button>
+          <Button onClick={exportPDF} variant="outline" size="sm">
+            <Download className="w-4 h-4 mr-2" /> Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* High Risk Clinical Alert */}

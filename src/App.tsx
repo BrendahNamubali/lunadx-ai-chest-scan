@@ -13,6 +13,7 @@ import ResultsPage from "./pages/ResultsPage";
 import HistoryPage from "./pages/HistoryPage";
 import PatientRecordPage from "./pages/PatientRecordPage";
 import DemoCasesPage from "./pages/DemoCasesPage";
+import SharedReportPage from "./pages/SharedReportPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/" element={<LandingPage />} />
+          <Route path="/report/:scanId" element={<SharedReportPage />} />
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/patients" element={<PatientsPage />} />

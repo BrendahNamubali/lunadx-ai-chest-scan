@@ -88,8 +88,20 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
             </div>
           </div>
 
-          {/* Overlay Toggles */}
+          {/* Overlay & Mode Toggles */}
           <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+            {/* Radiology Mode Toggle */}
+            <button
+              onClick={() => setRadiologyMode((v) => !v)}
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg backdrop-blur-sm text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                radiologyMode
+                  ? "bg-accent/20 text-accent border border-accent/30"
+                  : "bg-black/50 text-white/70 hover:text-white"
+              }`}
+            >
+              {radiologyMode ? <Moon className="w-3 h-3" /> : <Sun className="w-3 h-3" />}
+              {radiologyMode ? "Radiology" : "Light"}
+            </button>
             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm">
               <Switch
                 id="heatmap"

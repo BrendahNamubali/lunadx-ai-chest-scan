@@ -356,3 +356,16 @@ export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName
 
   return { tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk, abnormalityScore: Math.min(abnormalityScore, 100), riskLevel, findings, suggestions };
 }
+
+// ── Role-based access helpers ──────────────────────────
+export function canUploadScans(role?: UserRole): boolean {
+  return role === "Admin" || role === "Radiologist";
+}
+
+export function canManagePatients(role?: UserRole): boolean {
+  return role === "Admin" || role === "Radiologist";
+}
+
+export function canManageOrganization(role?: UserRole): boolean {
+  return role === "Admin";
+}

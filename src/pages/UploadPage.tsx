@@ -77,6 +77,19 @@ export default function UploadPage() {
   const patients = getPatients();
   const user = getCurrentUser();
 
+  // Role-based access check
+  if (!canUploadScans(user?.role)) {
+    return (
+      <div className="animate-fade-in max-w-2xl mx-auto text-center py-20">
+        <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
+        <h1 className="text-xl font-bold text-foreground mb-2">Access Restricted</h1>
+        <p className="text-sm text-muted-foreground mb-4">
+          Only Radiologists and Admins can upload and analyze X-rays. As a Clinician, you can view existing results in the <button onClick={() => navigate("/history")} className="text-primary hover:underline">scan history</button>.
+        </p>
+      </div>
+    );
+  }
+
   const [patientId, setPatientId] = useState(searchParams.get("patientId") || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);

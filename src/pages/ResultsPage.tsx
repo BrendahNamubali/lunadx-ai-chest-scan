@@ -337,11 +337,52 @@ export default function ResultsPage() {
       <RiskBanner scan={scan} />
 
       {/* Risk Gauges */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-5">
         <RiskGauge label="TB Probability" value={scan.tbRisk} icon={Activity} />
         <RiskGauge label="Pneumonia" value={scan.pneumoniaRisk} icon={Stethoscope} />
-        <RiskGauge label="Abnormality Score" value={scan.abnormalityScore} icon={TrendingUp} />
+        <RiskGauge label="Lung Opacity" value={scan.lungOpacityRisk ?? 0} icon={Eye} />
+        <RiskGauge label="Pleural Effusion" value={scan.pleuralEffusionRisk ?? 0} icon={Droplets} />
+        <RiskGauge label="Lung Nodules" value={scan.lungNodulesRisk ?? 0} icon={CircleDot} />
       </div>
+
+      {/* Detected Lung Abnormalities */}
+      {(() => {
+        const detected = [
+          { name: "Tuberculosis", risk: scan.tbRisk },
+          { name: "Pneumonia", risk: scan.pneumoniaRisk },
+          { name: "Lung Opacity", risk: scan.lungOpacityRisk ?? 0 },
+          { name: "Pleural Effusion", risk: scan.pleuralEffusionRisk ?? 0 },
+          { name: "Lung Nodules", risk: scan.lungNodulesRisk ?? 0 },
+        ].filter((d) => d.risk > 50);
+        return detected.length > 0 ? (
+          <Card className="mt-5 border-warning/20">
+            <CardContent className="pt-5 pb-5">
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-warning" />
+                Detected Lung Abnormalities
+              </h2>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {detected.map((d) => {
+                  const color = d.risk > 70 ? "bg-destructive/10 text-destructive border-destructive/20" : "bg-warning/10 text-warning border-warning/20";
+                  return (
+                    <motion.span
+                      key={d.name}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${color}`}
+                    >
+                      {d.name}: {d.risk}%
+                    </motion.span>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground italic">
+                Results are AI-assisted screening indicators and not definitive diagnoses. Future integration may use models from TorchXRayVision.
+              </p>
+            </CardContent>
+          </Card>
+        ) : null;
+      })()}
 
       {/* AI Confidence Score */}
       <motion.div

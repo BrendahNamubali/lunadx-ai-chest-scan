@@ -137,6 +137,9 @@ export default function ResultsPage() {
   const user = getCurrentUser();
   const scan = useMemo(() => getScans().find((s) => s.id === scanId), [scanId]);
 
+  const [notes, setNotes] = useState(scan?.doctorNotes || "");
+  const [isEditing, setIsEditing] = useState(!scan?.doctorNotes);
+
   if (!scan)
     return (
       <div className="text-center py-20 text-muted-foreground">

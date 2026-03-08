@@ -2,7 +2,7 @@ import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert, ShieldCheck, ShieldMinus, FileText, Save, Pencil, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { getScans, getCurrentUser, updateScanNotes, type ScanResult } from "@/lib/store";
+import { getScans, getCurrentUser, getOrganization, updateScanNotes, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

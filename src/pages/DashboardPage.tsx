@@ -177,6 +177,28 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Scan Usage */}
+      <Card className="mb-8">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Scan Usage</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Trial Plan · {scanUsage.remaining} scans remaining</p>
+            </div>
+            <Link to="/billing">
+              <Button variant="outline" size="sm" className="text-xs">
+                Manage Plan
+              </Button>
+            </Link>
+          </div>
+          <Progress value={Math.min((scanUsage.used / scanUsage.total) * 100, 100)} className="h-2.5" />
+          <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+            <span>{scanUsage.used} used</span>
+            <span>{scanUsage.total} total</span>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
         {/* Line Chart — spans 2 cols */}

@@ -123,6 +123,61 @@ export default function UploadPage() {
 
   const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
 
+  const handleTrySample = async () => {
+    setAnalyzing(true);
+    setAnalysisError(false);
+
+    // Ensure demo patient exists
+    const allPatients = getPatients();
+    let demoPatient = allPatients.find((p) => p.hospitalId === "SAMPLE-001");
+    if (!demoPatient) {
+      demoPatient = {
+        id: crypto.randomUUID(),
+        name: "Sample Patient",
+        age: 45,
+        sex: "Male" as const,
+        hospitalId: "SAMPLE-001",
+        symptoms: "Persistent cough, mild fever",
+        visitDate: new Date().toISOString().slice(0, 10),
+        createdAt: new Date().toISOString(),
+      };
+      savePatient(demoPatient);
+    }
+
+    try {
+      const aiResponse = await analyzeXray("/sample-xray.jpg");
+
+      const scan: ScanResult = {
+        id: crypto.randomUUID(),
+        patientId: demoPatient.id,
+        patientName: demoPatient.name,
+        imageUrl: "/sample-xray.jpg",
+        tbRisk: aiResponse.tb_probability,
+        pneumoniaRisk: aiResponse.pneumonia_probability,
+        lungOpacityRisk: 42,
+        pleuralEffusionRisk: 18,
+        lungNodulesRisk: 25,
+        abnormalityScore: Math.min(
+          Math.round(aiResponse.tb_probability * 0.3 + aiResponse.pneumonia_probability * 0.2 + 42 * 0.2 + 18 * 0.15 + 25 * 0.15),
+          100
+        ),
+        riskLevel: Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 70 ? "High" : Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 40 ? "Medium" : "Low",
+        findings: ["Opacity detected in upper right lobe", "Patchy consolidation in right middle lobe"],
+        suggestions: ["Recommend sputum AFB smear and culture", "Suggest CT scan for detailed evaluation", "Schedule follow-up imaging in 2 weeks"],
+        aiSummary: aiResponse.ai_summary,
+        heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
+        scanDate: new Date().toISOString(),
+        doctorName: user?.name || "Demo Doctor",
+      };
+      saveScan(scan);
+      setAnalyzing(false);
+      navigate(`/results/${scan.id}`);
+    } catch {
+      setAnalyzing(false);
+      setAnalysisError(true);
+    }
+  };
+
   const handleAnalyze = async () => {
     if (!patientId || !imageFile) return;
     setAnalyzing(true);

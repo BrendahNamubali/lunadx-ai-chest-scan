@@ -13,6 +13,7 @@ const navItems = [
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/demo", icon: FlaskConical, label: "Demo Cases" },
   { to: "/history", icon: FileText, label: "Audit Logs" },
+  { to: "/organization", icon: Building2, label: "Organization" },
   { to: "/billing", icon: CreditCard, label: "Billing" },
 ];
 

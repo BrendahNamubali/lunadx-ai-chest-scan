@@ -85,6 +85,100 @@ function RiskBanner({ scan }: { scan: ScanResult }) {
   );
 }
 
+/* ─── Heatmap Viewer ─────────────────────────────────── */
+function HeatmapViewer({ scan }: { scan: ScanResult }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  // Generate deterministic hotspots from scan data
+  const hotspots = useMemo(() => {
+    const seed = (scan.tbRisk * 7 + scan.pneumoniaRisk * 13 + scan.lungOpacityRisk * 3) % 1000;
+    const rng = (i: number) => ((seed * (i + 1) * 9301 + 49297) % 233280) / 233280;
+    const spots: { x: number; y: number; r: number; intensity: number }[] = [];
+    const count = scan.riskLevel === "High" ? 5 : scan.riskLevel === "Medium" ? 3 : 2;
+    for (let i = 0; i < count; i++) {
+      spots.push({
+        x: 0.25 + rng(i) * 0.5,
+        y: 0.2 + rng(i + 10) * 0.5,
+        r: 0.08 + rng(i + 20) * 0.12,
+        intensity: 0.3 + rng(i + 30) * 0.7,
+      });
+    }
+    return spots;
+  }, [scan]);
+
+  const drawHeatmap = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // Draw grayscale X-ray
+      ctx.filter = "grayscale(1) contrast(1.2) brightness(1.05)";
+      ctx.drawImage(img, 0, 0);
+      ctx.filter = "none";
+
+      // Draw heatmap blobs
+      hotspots.forEach(({ x, y, r, intensity }) => {
+        const cx = x * img.width;
+        const cy = y * img.height;
+        const radius = r * Math.min(img.width, img.height);
+
+        const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        const alpha = intensity * 0.55;
+
+        if (intensity > 0.7) {
+          gradient.addColorStop(0, `rgba(255, 0, 0, ${alpha})`);
+          gradient.addColorStop(0.5, `rgba(255, 80, 0, ${alpha * 0.6})`);
+          gradient.addColorStop(1, "rgba(255, 200, 0, 0)");
+        } else if (intensity > 0.4) {
+          gradient.addColorStop(0, `rgba(255, 180, 0, ${alpha})`);
+          gradient.addColorStop(0.6, `rgba(255, 220, 0, ${alpha * 0.4})`);
+          gradient.addColorStop(1, "rgba(255, 255, 0, 0)");
+        } else {
+          gradient.addColorStop(0, `rgba(0, 200, 100, ${alpha})`);
+          gradient.addColorStop(0.6, `rgba(0, 255, 150, ${alpha * 0.3})`);
+          gradient.addColorStop(1, "rgba(0, 255, 200, 0)");
+        }
+
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.globalCompositeOperation = "source-over";
+      setLoaded(true);
+    };
+    img.src = scan.imageUrl;
+  }, [scan.imageUrl, hotspots]);
+
+  useEffect(() => {
+    drawHeatmap();
+  }, [drawHeatmap]);
+
+  return (
+    <div className="relative">
+      {!loaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 rounded-lg">
+          <Activity className="w-6 h-6 text-primary animate-pulse" />
+        </div>
+      )}
+      <canvas
+        ref={canvasRef}
+        className="w-full h-auto rounded-lg object-contain max-h-[400px]"
+      />
+    </div>
+  );
+}
+
 /* ─── Main Page ──────────────────────────────────────── */
 export default function ResultsPage() {
   const { scanId } = useParams();

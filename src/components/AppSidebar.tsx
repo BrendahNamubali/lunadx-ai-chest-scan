@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, X, Smartphone, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, X, Smartphone, BarChart3, ClipboardList } from "lucide-react";
 import { getCurrentUser, logout } from "@/lib/store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";

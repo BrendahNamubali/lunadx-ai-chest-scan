@@ -78,7 +78,7 @@ export default function PatientsPage() {
                 <Button variant="ghost" size="icon" onClick={() => openEdit(p)} title="Edit"><Edit2 className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)} title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

@@ -1,32 +1,101 @@
 import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Download, ArrowLeft, Activity, Stethoscope, TrendingUp, AlertTriangle, CheckCircle, FileText, BrainCircuit, Lightbulb } from "lucide-react";
+import { Download, ArrowLeft, Shield, Activity, Stethoscope, TrendingUp, AlertTriangle, CheckCircle, FileText, BrainCircuit, Lightbulb, Droplets, CircleDot, Eye, Printer } from "lucide-react";
 import { motion } from "framer-motion";
 import { getScans, getPatients, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import jsPDF from "jspdf";
 
-function RiskGaugeSmall({ label, value }: { label: string; value: number }) {
-  const color = value > 70 ? "text-destructive" : value > 40 ? "text-warning" : "text-success";
-  const bg = value > 70 ? "bg-destructive" : value > 40 ? "bg-warning" : "bg-success";
+/* ─── Helpers ────────────────────────────────────────── */
+const getRiskColor = (v: number) => (v > 70 ? "text-destructive" : v > 40 ? "text-warning" : "text-success");
+const getRiskBg = (v: number) => (v > 70 ? "bg-destructive" : v > 40 ? "bg-warning" : "bg-success");
+const getRiskHsl = (v: number) => (v > 70 ? "hsl(0,72%,51%)" : v > 40 ? "hsl(30,90%,50%)" : "hsl(142,60%,40%)");
+const getRiskLabel = (v: number) => (v > 70 ? "High" : v > 40 ? "Moderate" : "Low");
+const getRiskBadgeCls = (v: number) =>
+  v > 70 ? "bg-destructive/15 text-destructive" : v > 40 ? "bg-warning/15 text-warning" : "bg-success/15 text-success";
+
+/* ─── Circular Ring ──────────────────────────────────── */
+function CircularScore({ label, value, size = 88 }: { label: string; value: number; size?: number }) {
+  const r = (size - 12) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (value / 100) * c;
+  const center = size / 2;
   return (
-    <div className="text-center">
-      <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-1">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
-          transition={{ duration: 0.8 }}
-          className={`h-full rounded-full ${bg}`}
-        />
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg viewBox={`0 0 ${size} ${size}`} className="w-full h-full -rotate-90">
+          <circle cx={center} cy={center} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
+          <motion.circle
+            cx={center} cy={center} r={r} fill="none"
+            stroke={getRiskHsl(value)}
+            strokeWidth="6" strokeLinecap="round"
+            strokeDasharray={c}
+            initial={{ strokeDashoffset: c }}
+            animate={{ strokeDashoffset: offset }}
+            transition={{ duration: 1, ease: "easeOut" }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className={`text-lg font-bold ${getRiskColor(value)}`}>{value}%</span>
+        </div>
       </div>
-      <span className={`text-lg font-bold ${color}`}>{value}%</span>
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
+      <span className={`text-[9px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full ${getRiskBadgeCls(value)}`}>
+        {getRiskLabel(value)}
+      </span>
     </div>
   );
 }
 
+/* ─── Horizontal Bar ─────────────────────────────────── */
+function HorizontalScore({ label, value, icon: Icon }: { label: string; value: number; icon: React.ElementType }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5">
+          <Icon className={`w-3.5 h-3.5 ${getRiskColor(value)}`} />
+          <span className="text-xs font-medium text-foreground">{label}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs font-bold tabular-nums ${getRiskColor(value)}`}>{value}%</span>
+          <span className={`text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded ${getRiskBadgeCls(value)}`}>
+            {getRiskLabel(value)}
+          </span>
+        </div>
+      </div>
+      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${value}%` }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className={`h-full rounded-full ${getRiskBg(value)}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─── AI Explanations ────────────────────────────────── */
+function generateExplanations(scan: ScanResult): string[] {
+  const pool: string[] = [];
+  scan.findings.forEach((f) => {
+    const fl = f.toLowerCase();
+    if (fl.includes("opacity")) pool.push("Lung opacity detected suggesting possible infiltrate or mass");
+    if (fl.includes("consolidation")) pool.push("Density pattern consistent with alveolar consolidation");
+    if (fl.includes("cavitary") || fl.includes("cavitation")) pool.push("Cavitation pattern identified, often associated with TB or abscess");
+    if (fl.includes("miliary")) pool.push("Miliary pattern — small nodular opacities across lung fields");
+    if (fl.includes("pleural")) pool.push("Pleural abnormality suggesting fluid accumulation");
+    if (fl.includes("lymphadenopathy")) pool.push("Enlarged lymph nodes in hilar region");
+  });
+  if (scan.tbRisk > 60) pool.push("Irregular texture in upper lobes consistent with tuberculosis");
+  if (scan.pneumoniaRisk > 60) pool.push("Diffuse opacification suggestive of infectious pneumonia");
+  if (pool.length === 0) pool.push("No significant abnormal patterns detected by the AI model");
+  return [...new Set(pool)].slice(0, 5);
+}
+
+/* ─── Main Report ────────────────────────────────────── */
 export default function SharedReportPage() {
   const { scanId } = useParams();
   const scan = useMemo(() => getScans().find((s) => s.id === scanId), [scanId]);
@@ -52,196 +121,326 @@ export default function SharedReportPage() {
       </div>
     );
 
+  const reportDate = new Date(scan.scanDate).toLocaleDateString("en-US", {
+    year: "numeric", month: "long", day: "numeric",
+  });
+  const reportId = `RPT-${scan.id.slice(0, 8).toUpperCase()}`;
+
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("LunaDX Clinical Report", 20, 20);
+    doc.text("LunaDX — AI Screening Report", 20, 20);
+    doc.setFontSize(9);
+    doc.text(`Report ID: ${reportId}  |  Generated: ${reportDate}`, 20, 28);
+    doc.setLineWidth(0.4);
+    doc.line(20, 32, 190, 32);
+    doc.setFontSize(11);
+    doc.text("Patient Information", 20, 40);
     doc.setFontSize(10);
-    doc.text(`Doctor: ${scan.doctorName}`, 20, 30);
-    doc.text(`Date: ${new Date(scan.scanDate).toLocaleDateString()}`, 20, 36);
-    doc.setLineWidth(0.3);
-    doc.line(20, 40, 190, 40);
-    doc.setFontSize(12);
-    doc.text("Patient Information", 20, 48);
+    doc.text(`Name: ${scan.patientName}`, 20, 48);
+    if (patient) doc.text(`Age: ${patient.age} | Sex: ${patient.sex} | Hospital ID: ${patient.hospitalId}`, 20, 54);
+    doc.text(`Attending Physician: ${scan.doctorName}`, 20, patient ? 60 : 54);
+    const riskY = patient ? 72 : 66;
+    doc.setFontSize(11);
+    doc.text("AI Screening Results", 20, riskY);
     doc.setFontSize(10);
-    doc.text(`Name: ${scan.patientName}`, 20, 56);
-    if (patient) {
-      doc.text(`Age: ${patient.age} | Sex: ${patient.sex} | Hospital ID: ${patient.hospitalId}`, 20, 62);
-    }
-    doc.setFontSize(12);
-    doc.text("AI Analysis Results", 20, 74);
+    doc.text(`TB Risk: ${scan.tbRisk}% (${getRiskLabel(scan.tbRisk)})`, 20, riskY + 8);
+    doc.text(`Pneumonia Risk: ${scan.pneumoniaRisk}% (${getRiskLabel(scan.pneumoniaRisk)})`, 20, riskY + 14);
+    doc.text(`Lung Abnormality: ${scan.abnormalityScore}% (${getRiskLabel(scan.abnormalityScore)})`, 20, riskY + 20);
+    doc.text(`Overall Classification: ${scan.riskLevel}`, 20, riskY + 26);
+    doc.text(`AI Confidence: ${aiConfidence}%`, 20, riskY + 32);
+    let y = riskY + 44;
+    doc.setFontSize(11);
+    doc.text("AI Findings", 20, y);
     doc.setFontSize(10);
-    doc.text(`TB Risk: ${scan.tbRisk}%`, 20, 82);
-    doc.text(`Pneumonia Risk: ${scan.pneumoniaRisk}%`, 20, 88);
-    doc.text(`Abnormality Score: ${scan.abnormalityScore}%`, 20, 94);
-    doc.text(`Risk Classification: ${scan.riskLevel}`, 20, 100);
-    doc.text(`AI Confidence: ${aiConfidence}%`, 20, 106);
-    doc.setFontSize(12);
-    doc.text("Findings", 20, 118);
+    scan.findings.forEach((f, i) => { doc.text(`• ${f}`, 24, y + 8 + i * 6); });
+    y = y + 8 + scan.findings.length * 6 + 8;
+    doc.setFontSize(11);
+    doc.text("Suggested Clinical Next Steps", 20, y);
     doc.setFontSize(10);
-    scan.findings.forEach((f, i) => doc.text(`• ${f}`, 24, 126 + i * 6));
-    const sugStart = 126 + scan.findings.length * 6 + 10;
-    doc.setFontSize(12);
-    doc.text("Recommended Next Steps", 20, sugStart);
-    doc.setFontSize(10);
-    scan.suggestions.forEach((s, i) => doc.text(`${i + 1}. ${s}`, 24, sugStart + 8 + i * 6));
-    let notesY = sugStart + 8 + scan.suggestions.length * 6 + 10;
+    scan.suggestions.forEach((s, i) => { doc.text(`${i + 1}. ${s}`, 24, y + 8 + i * 6); });
+    y = y + 8 + scan.suggestions.length * 6 + 8;
     if (scan.doctorNotes?.trim()) {
-      doc.setFontSize(12);
-      doc.text("Doctor's Clinical Notes", 20, notesY);
+      doc.setFontSize(11);
+      doc.text("Doctor's Clinical Notes", 20, y);
       doc.setFontSize(10);
-      const noteLines = doc.splitTextToSize(scan.doctorNotes, 166);
-      doc.text(noteLines, 20, notesY + 8);
-      notesY = notesY + 8 + noteLines.length * 5 + 6;
+      const lines = doc.splitTextToSize(scan.doctorNotes, 166);
+      doc.text(lines, 20, y + 8);
+      y = y + 8 + lines.length * 5 + 6;
     }
     doc.setFontSize(8);
-    doc.text("Disclaimer: LunaDX is an AI-assisted screening tool. Results must be reviewed by a qualified healthcare professional.", 20, notesY + 8);
+    doc.setTextColor(120);
+    doc.text("Disclaimer: This report provides AI-assisted screening insights and should not replace clinical diagnosis.", 20, y + 8);
+    doc.text("All findings must be reviewed by a qualified healthcare professional.", 20, y + 13);
     doc.save(`LunaDX_Report_${scan.patientName.replace(/\s/g, "_")}.pdf`);
   };
 
+  const sectionDelay = (i: number) => ({ delay: 0.08 * i });
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header bar */}
-      <div className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      {/* Sticky action bar */}
+      <div className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10 print:hidden">
+        <div className="max-w-[900px] mx-auto px-4 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Activity className="w-4 h-4 text-primary-foreground" />
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
+              <Shield className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold text-foreground text-sm">LunaDX Report</span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">READ ONLY</span>
+            <span className="font-semibold text-foreground text-sm">LunaDX Report</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium uppercase tracking-wider">Read Only</span>
           </div>
           <div className="flex items-center gap-2">
+            <Button onClick={() => window.print()} variant="ghost" size="sm">
+              <Printer className="w-4 h-4 mr-1" /> Print
+            </Button>
             <Button onClick={exportPDF} variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-1" /> Download PDF
+              <Download className="w-4 h-4 mr-1" /> PDF
             </Button>
             <Link to="/dashboard">
               <Button variant="ghost" size="sm">
-                <ArrowLeft className="w-4 h-4 mr-1" /> Dashboard
+                <ArrowLeft className="w-4 h-4 mr-1" /> Back
               </Button>
             </Link>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        {/* Patient Info */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                  <h1 className="text-lg font-bold text-foreground">{scan.patientName}</h1>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {patient ? `${patient.age}y · ${patient.sex} · ID: ${patient.hospitalId}` : "Patient details unavailable"}
-                    {" · "}Scan: {new Date(scan.scanDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Doctor: {scan.doctorName}</p>
-                </div>
-                <RiskBadge level={scan.riskLevel} />
+      {/* Report body — A4-like container */}
+      <div className="max-w-[900px] mx-auto px-6 py-8 space-y-0">
+
+        {/* ═══ REPORT HEADER ═══ */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center">
+                <Shield className="w-6 h-6 text-primary-foreground" />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <h1 className="text-xl font-bold text-foreground tracking-tight">AI Screening Report</h1>
+                <p className="text-xs text-muted-foreground">LunaDX Clinical Screening Platform</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] text-muted-foreground">Report ID: <span className="font-mono font-medium text-foreground">{reportId}</span></p>
+              <p className="text-[11px] text-muted-foreground">Generated: <span className="font-medium text-foreground">{reportDate}</span></p>
+              <RiskBadge level={scan.riskLevel} />
+            </div>
+          </div>
+          <Separator className="mt-5" />
         </motion.div>
 
-        {/* Risk Scores */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {[
-              { label: "TB Risk", value: scan.tbRisk },
-              { label: "Pneumonia", value: scan.pneumoniaRisk },
-              { label: "Abnormality", value: scan.abnormalityScore },
-            ].map((item) => (
-              <Card key={item.label}>
-                <CardContent className="pt-4 pb-4">
-                  <RiskGaugeSmall label={item.label} value={item.value} />
-                </CardContent>
-              </Card>
-            ))}
-            <Card>
-              <CardContent className="pt-4 pb-4 text-center">
-                <p className="text-xs text-muted-foreground mb-1 flex items-center justify-center gap-1">
-                  <BrainCircuit className="w-3 h-3" /> AI Confidence
-                </p>
-                <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-1">
+        {/* ═══ 1. PATIENT INFORMATION ═══ */}
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={sectionDelay(1)} className="mb-7">
+          <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">1</span>
+            Patient Information
+          </h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Patient Name</p>
+                <p className="text-sm font-semibold text-foreground">{scan.patientName}</p>
+              </div>
+              {patient && (
+                <>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Age / Sex</p>
+                    <p className="text-sm font-semibold text-foreground">{patient.age}y &middot; {patient.sex}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Hospital ID</p>
+                    <p className="text-sm font-mono font-semibold text-foreground">{patient.hospitalId}</p>
+                  </div>
+                </>
+              )}
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Attending Physician</p>
+                <p className="text-sm font-semibold text-foreground">{scan.doctorName}</p>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ═══ 2. X-RAY IMAGE ═══ */}
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={sectionDelay(2)} className="mb-7">
+          <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">2</span>
+            Chest X-Ray Image
+          </h2>
+          <div className="rounded-xl border border-border overflow-hidden bg-foreground/[0.03]">
+            <div className="relative flex items-center justify-center p-4" style={{ background: "hsl(220,15%,10%)" }}>
+              <img
+                src={scan.imageUrl}
+                alt={`Chest X-ray of ${scan.patientName}`}
+                className="max-h-[380px] w-auto object-contain rounded"
+              />
+              <div className="absolute top-3 left-3 text-[10px] font-mono text-white/50">
+                {scan.patientName} &middot; {reportDate}
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ═══ 3. AI SCREENING RESULTS ═══ */}
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={sectionDelay(3)} className="mb-7">
+          <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">3</span>
+            AI Screening Results
+          </h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            {/* Primary scores as circles */}
+            <div className="flex flex-wrap items-start justify-center gap-8 mb-6">
+              <CircularScore label="TB Risk" value={scan.tbRisk} />
+              <CircularScore label="Pneumonia" value={scan.pneumoniaRisk} />
+              <CircularScore label="Abnormality" value={scan.abnormalityScore} />
+            </div>
+
+            <Separator className="mb-5" />
+
+            {/* Secondary scores as bars */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+              <HorizontalScore label="Lung Opacity" value={scan.lungOpacityRisk ?? 0} icon={Eye} />
+              <HorizontalScore label="Pleural Effusion" value={scan.pleuralEffusionRisk ?? 0} icon={Droplets} />
+              <HorizontalScore label="Lung Nodules" value={scan.lungNodulesRisk ?? 0} icon={CircleDot} />
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <BrainCircuit className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-medium text-foreground">AI Confidence</span>
+                  </div>
+                  <span className="text-xs font-bold text-primary tabular-nums">{aiConfidence}%</span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${aiConfidence}%` }}
-                    transition={{ duration: 0.8 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
                     className="h-full rounded-full bg-primary"
                   />
                 </div>
-                <span className="text-lg font-bold text-primary">{aiConfidence}%</span>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
+            {/* Classification */}
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+              <span className="text-xs text-muted-foreground">Overall Classification:</span>
+              <RiskBadge level={scan.riskLevel} />
+            </div>
+          </div>
+        </motion.section>
+
+        {/* ═══ 4. AI EXPLANATION ═══ */}
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={sectionDelay(4)} className="mb-7">
+          <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">4</span>
+            AI Explanation
+          </h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            {/* Findings */}
+            <h3 className="text-[11px] font-semibold text-foreground uppercase tracking-wide mb-2.5 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-warning" /> Detected Findings
+            </h3>
+            <ul className="space-y-1.5 mb-5">
+              {scan.findings.map((f, i) => (
+                <motion.li
+                  key={i}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.06 * i }}
+                  className="flex items-start gap-2.5 text-sm p-2 rounded-lg bg-muted/40"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-warning mt-2 shrink-0" />
+                  <span className="text-foreground">{f}</span>
+                </motion.li>
+              ))}
+            </ul>
+
+            {/* Why flagged */}
+            <h3 className="text-[11px] font-semibold text-foreground uppercase tracking-wide mb-2.5 flex items-center gap-1.5">
+              <Lightbulb className="w-3.5 h-3.5 text-primary" /> Why This Case Was Flagged
+            </h3>
+            <ul className="space-y-1.5">
+              {generateExplanations(scan).map((item, i) => (
+                <motion.li
+                  key={i}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.06 * i }}
+                  className="flex items-start gap-2.5 text-sm p-2 rounded-lg bg-primary/5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
+                  <span className="text-foreground">{item}</span>
+                </motion.li>
+              ))}
+            </ul>
+            <p className="text-[10px] text-muted-foreground mt-3 italic">
+              These explanations are AI-generated to aid clinical interpretation and do not replace professional judgment.
+            </p>
+          </div>
+        </motion.section>
+
+        {/* ═══ 5. DOCTOR NOTES ═══ */}
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={sectionDelay(5)} className="mb-7">
+          <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">5</span>
+            Doctor's Clinical Notes
+          </h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            {scan.doctorNotes?.trim() ? (
+              <div className="p-3 rounded-lg bg-muted/40 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                {scan.doctorNotes}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No clinical notes have been added to this report.</p>
+            )}
+          </div>
+        </motion.section>
+
+        {/* ═══ 6. SUGGESTED CLINICAL NEXT STEPS ═══ */}
+        <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={sectionDelay(6)} className="mb-7">
+          <h2 className="text-xs font-bold text-primary uppercase tracking-widest mb-3 flex items-center gap-2">
+            <span className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">6</span>
+            Suggested Clinical Next Steps
+          </h2>
+          <div className="rounded-xl border border-border bg-card p-5">
+            <ul className="space-y-2">
+              {scan.suggestions.map((s, i) => (
+                <motion.li
+                  key={i}
+                  initial={{ opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.08 * i }}
+                  className="flex items-start gap-3 text-sm"
+                >
+                  <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0 mt-0.5">
+                    {i + 1}
+                  </span>
+                  <span className="text-foreground">{s}</span>
+                </motion.li>
+              ))}
+            </ul>
+          </div>
+        </motion.section>
+
+        {/* ═══ DISCLAIMER ═══ */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={sectionDelay(7)} className="mb-6">
+          <div className="rounded-xl border border-warning/25 bg-warning/5 p-4">
+            <p className="text-xs text-foreground font-semibold mb-1 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-warning" /> Medical Disclaimer
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              This report provides AI-assisted screening insights and should not replace clinical diagnosis. 
+              All findings are generated by automated analysis and must be reviewed and confirmed by a qualified 
+              healthcare professional before any clinical decisions are made.
+            </p>
           </div>
         </motion.div>
 
-        {/* X-ray Image */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="overflow-hidden">
-            <img src={scan.imageUrl} alt="Chest X-ray" className="w-full max-h-[400px] object-contain bg-foreground/5" />
-          </Card>
-        </motion.div>
-
-        {/* Findings + Suggestions side by side */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Card className="h-full">
-              <CardContent className="pt-5 pb-5">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-warning" /> AI Findings
-                </h2>
-                <ul className="space-y-2">
-                  {scan.findings.map((f, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm p-2 rounded-lg bg-muted/40">
-                      <span className="w-2 h-2 rounded-full bg-warning mt-1.5 shrink-0" />
-                      <span className="text-foreground">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-            <Card className="h-full">
-              <CardContent className="pt-5 pb-5">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-success" /> Recommended Next Steps
-                </h2>
-                <ul className="space-y-2">
-                  {scan.suggestions.map((s, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm">
-                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold shrink-0 mt-0.5">{i + 1}</span>
-                      <span className="text-foreground">{s}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-
-        {/* Doctor Notes (read-only) */}
-        {scan.doctorNotes?.trim() && (
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Card>
-              <CardContent className="pt-5 pb-5">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-primary" /> Doctor's Clinical Notes
-                </h2>
-                <div className="p-3 rounded-lg bg-muted/40 text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                  {scan.doctorNotes}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Disclaimer */}
-        <div className="p-4 rounded-lg bg-warning/5 border border-warning/20 text-xs text-muted-foreground">
-          <strong className="text-foreground">⚠ Disclaimer:</strong> This is an AI-assisted screening result and does not constitute a definitive medical diagnosis. All findings must be reviewed and confirmed by a qualified healthcare professional.
+        {/* Footer */}
+        <div className="text-center pb-8">
+          <p className="text-[10px] text-muted-foreground">
+            LunaDX Clinical Screening Platform &middot; {reportId} &middot; Generated {reportDate}
+          </p>
         </div>
       </div>
     </div>

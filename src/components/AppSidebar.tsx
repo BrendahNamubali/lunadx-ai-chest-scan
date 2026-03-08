@@ -11,6 +11,7 @@ const navItems = [
   { to: "/upload", icon: Upload, label: "New Scan" },
   { to: "/mobile-upload", icon: Smartphone, label: "Mobile Upload" },
   { to: "/history", icon: History, label: "Scan History" },
+  { to: "/analytics", icon: BarChart3, label: "Analytics" },
 ];
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {

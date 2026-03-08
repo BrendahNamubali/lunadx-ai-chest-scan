@@ -245,14 +245,18 @@ export default function ResultsPage() {
 
       {/* Main Content: X-ray + Risk Score side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-        {/* X-ray Image */}
+        {/* X-ray with Heatmap */}
         <Card className="overflow-hidden">
-          <div className="bg-muted/30 p-1">
-            <img
-              src={scan.imageUrl}
-              alt={`X-ray for ${scan.patientName}`}
-              className="w-full h-auto rounded-lg object-contain max-h-[400px]"
-            />
+          <div className="bg-black p-1 relative">
+            <HeatmapViewer scan={scan} />
+          </div>
+          <div className="px-3 py-2 flex items-center justify-between bg-muted/20">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">AI Heatmap Overlay</span>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500" /><span className="text-[9px] text-muted-foreground">Low</span>
+              <span className="w-2 h-2 rounded-full bg-yellow-500" /><span className="text-[9px] text-muted-foreground">Med</span>
+              <span className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[9px] text-muted-foreground">High</span>
+            </div>
           </div>
         </Card>
 

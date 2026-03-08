@@ -107,8 +107,11 @@ export function saveScan(scan: ScanResult) {
 export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName" | "imageUrl" | "scanDate" | "doctorName"> {
   const tbRisk = Math.round(Math.random() * 100);
   const pneumoniaRisk = Math.round(Math.random() * 100);
-  const abnormalityScore = Math.round((tbRisk * 0.5 + pneumoniaRisk * 0.3 + Math.random() * 20));
-  const maxRisk = Math.max(tbRisk, pneumoniaRisk);
+  const lungOpacityRisk = Math.round(Math.random() * 100);
+  const pleuralEffusionRisk = Math.round(Math.random() * 100);
+  const lungNodulesRisk = Math.round(Math.random() * 100);
+  const abnormalityScore = Math.round((tbRisk * 0.3 + pneumoniaRisk * 0.2 + lungOpacityRisk * 0.2 + pleuralEffusionRisk * 0.15 + lungNodulesRisk * 0.15));
+  const maxRisk = Math.max(tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk);
   const riskLevel: "Low" | "Medium" | "High" = maxRisk > 70 ? "High" : maxRisk > 40 ? "Medium" : "Low";
 
   const allFindings = [

@@ -429,13 +429,16 @@ export default function ResultsPage() {
       {/* Risk Banner */}
       <RiskBanner scan={scan} />
 
-      {/* Risk Gauges */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mt-5">
-        <RiskGauge label="TB Probability" value={scan.tbRisk} icon={Activity} />
-        <RiskGauge label="Pneumonia" value={scan.pneumoniaRisk} icon={Stethoscope} />
-        <RiskGauge label="Lung Opacity" value={scan.lungOpacityRisk ?? 0} icon={Eye} />
-        <RiskGauge label="Pleural Effusion" value={scan.pleuralEffusionRisk ?? 0} icon={Droplets} />
-        <RiskGauge label="Lung Nodules" value={scan.lungNodulesRisk ?? 0} icon={CircleDot} />
+      {/* Risk Visualizations */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+        <CircularRisk label="TB Probability" value={scan.tbRisk} icon={Activity} />
+        <HorizontalRiskBar label="Pneumonia Risk" value={scan.pneumoniaRisk} icon={Stethoscope} />
+        <GaugeMeter label="Lung Abnormality" value={scan.abnormalityScore} icon={TrendingUp} />
+      </div>
+      <div className="grid grid-cols-3 gap-4 mt-4">
+        <SmallGauge label="Lung Opacity" value={scan.lungOpacityRisk ?? 0} icon={Eye} />
+        <SmallGauge label="Pleural Effusion" value={scan.pleuralEffusionRisk ?? 0} icon={Droplets} />
+        <SmallGauge label="Lung Nodules" value={scan.lungNodulesRisk ?? 0} icon={CircleDot} />
       </div>
 
       {/* Detected Lung Abnormalities */}

@@ -144,7 +144,12 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
               <img
                 src={scan.imageUrl}
                 alt="Chest X-ray"
-                className="max-w-full max-h-full object-contain"
+                className="max-w-full max-h-full object-contain transition-all duration-300"
+                style={{
+                  filter: radiologyMode
+                    ? "contrast(1.4) brightness(1.15) saturate(0)"
+                    : "none",
+                }}
                 draggable={false}
               />
 

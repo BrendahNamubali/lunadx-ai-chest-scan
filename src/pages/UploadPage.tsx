@@ -1,10 +1,74 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Upload, FileImage, X } from "lucide-react";
+import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { getPatients, getCurrentUser, simulateAI, saveScan, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+
+type QualityStatus = "Good" | "Acceptable" | "Poor";
+interface QualityCheck {
+  label: string;
+  icon: React.ElementType;
+  status: QualityStatus;
+  detail: string;
+}
+
+function simulateQualityAssessment(): QualityCheck[] {
+  const statuses: QualityStatus[] = ["Good", "Acceptable", "Poor"];
+  const weights = [0.6, 0.3, 0.1]; // bias toward good
+  const pick = (): QualityStatus => {
+    const r = Math.random();
+    return r < weights[0] ? statuses[0] : r < weights[0] + weights[1] ? statuses[1] : statuses[2];
+  };
+
+  const resolution = pick();
+  const coverage = pick();
+  const positioning = pick();
+  const artifacts = pick();
+
+  return [
+    {
+      label: "Image Resolution",
+      icon: Monitor,
+      status: resolution,
+      detail: resolution === "Good" ? "Sufficient for analysis (≥2000px)" : resolution === "Acceptable" ? "Moderate resolution detected" : "Low resolution may reduce accuracy",
+    },
+    {
+      label: "Lung Coverage",
+      icon: Target,
+      status: coverage,
+      detail: coverage === "Good" ? "Full bilateral lung fields visible" : coverage === "Acceptable" ? "Minor peripheral cutoff detected" : "Incomplete lung coverage",
+    },
+    {
+      label: "Patient Positioning",
+      icon: User,
+      status: positioning,
+      detail: positioning === "Good" ? "Correct PA positioning confirmed" : positioning === "Acceptable" ? "Slight rotation noted" : "Significant rotation detected",
+    },
+    {
+      label: "Image Artifacts",
+      icon: Sparkles,
+      status: artifacts,
+      detail: artifacts === "Good" ? "None detected" : artifacts === "Acceptable" ? "Minor artifacts present" : "Motion blur or foreign objects detected",
+    },
+  ];
+}
+
+function QualityBadge({ status }: { status: QualityStatus }) {
+  const styles = {
+    Good: "bg-success/15 text-success",
+    Acceptable: "bg-warning/15 text-warning",
+    Poor: "bg-destructive/15 text-destructive",
+  };
+  return (
+    <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${styles[status]}`}>
+      {status}
+    </span>
+  );
+}
 
 export default function UploadPage() {
   const [searchParams] = useSearchParams();
@@ -17,14 +81,31 @@ export default function UploadPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [qualityChecks, setQualityChecks] = useState<QualityCheck[] | null>(null);
+  const [assessingQuality, setAssessingQuality] = useState(false);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
     setImageFile(file);
+    setQualityChecks(null);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
   }, []);
+
+  // Run quality assessment when image is loaded
+  useEffect(() => {
+    if (!preview) {
+      setQualityChecks(null);
+      return;
+    }
+    setAssessingQuality(true);
+    const timer = setTimeout(() => {
+      setQualityChecks(simulateQualityAssessment());
+      setAssessingQuality(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [preview]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -32,10 +113,17 @@ export default function UploadPage() {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   }, [handleFile]);
 
+  const clearImage = () => {
+    setImageFile(null);
+    setPreview(null);
+    setQualityChecks(null);
+  };
+
+  const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
+
   const handleAnalyze = async () => {
     if (!patientId || !imageFile) return;
     setAnalyzing(true);
-    // Simulate AI processing delay
     await new Promise((r) => setTimeout(r, 2000));
     const patient = patients.find((p) => p.id === patientId)!;
     const ai = simulateAI();
@@ -82,7 +170,7 @@ export default function UploadPage() {
           {preview ? (
             <div className="mt-2 relative stat-card p-0 overflow-hidden">
               <img src={preview} alt="X-ray preview" className="w-full max-h-96 object-contain bg-foreground/5" />
-              <button onClick={() => { setImageFile(null); setPreview(null); }} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/80 flex items-center justify-center hover:bg-foreground transition-colors">
+              <button onClick={clearImage} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/80 flex items-center justify-center hover:bg-foreground transition-colors">
                 <X className="w-4 h-4 text-background" />
               </button>
             </div>
@@ -104,7 +192,83 @@ export default function UploadPage() {
           )}
         </div>
 
-        <Button onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing} className="w-full medical-gradient text-primary-foreground border-0 hover:opacity-90 h-12 text-sm">
+        {/* Image Quality Assessment */}
+        <AnimatePresence>
+          {(assessingQuality || qualityChecks) && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Card>
+                <CardContent className="pt-5 pb-5">
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4 flex items-center gap-2">
+                    <Monitor className="w-4 h-4 text-primary" />
+                    Image Quality Assessment
+                  </h2>
+
+                  {assessingQuality ? (
+                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Assessing image quality…
+                    </div>
+                  ) : qualityChecks && (
+                    <div className="space-y-3">
+                      {qualityChecks.map((check, i) => (
+                        <motion.div
+                          key={check.label}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.08 }}
+                          className="flex items-center justify-between gap-3 p-2.5 rounded-lg bg-muted/40"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <check.icon className="w-4 h-4 text-muted-foreground shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground">{check.label}</p>
+                              <p className="text-xs text-muted-foreground truncate">{check.detail}</p>
+                            </div>
+                          </div>
+                          <QualityBadge status={check.status} />
+                        </motion.div>
+                      ))}
+
+                      {/* Overall verdict */}
+                      {hasPoorQuality ? (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.4 }}
+                          className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/8 border border-destructive/20 mt-2"
+                        >
+                          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                          <p className="text-xs text-destructive leading-relaxed">
+                            <strong>Warning:</strong> Image quality may affect AI screening accuracy. Consider re-uploading a higher-quality image for more reliable results.
+                          </p>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.4 }}
+                          className="flex items-start gap-2.5 p-3 rounded-lg bg-success/8 border border-success/20 mt-2"
+                        >
+                          <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                          <p className="text-xs text-success leading-relaxed">
+                            Image quality is sufficient for AI screening analysis.
+                          </p>
+                        </motion.div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <Button onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing || assessingQuality} className="w-full medical-gradient text-primary-foreground border-0 hover:opacity-90 h-12 text-sm">
           {analyzing ? (
             <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Analyzing X-Ray...</span>
           ) : (

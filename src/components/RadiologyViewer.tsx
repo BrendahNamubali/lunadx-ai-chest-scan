@@ -20,6 +20,7 @@ export default function RadiologyViewer({ scan, aiConfidence }: RadiologyViewerP
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showLungOutline, setShowLungOutline] = useState(false);
+  const [radiologyMode, setRadiologyMode] = useState(false);
 
   const zoomIn = () => setZoom((z) => Math.min(z + 0.25, 3));
   const zoomOut = () => setZoom((z) => Math.max(z - 0.25, 0.5));

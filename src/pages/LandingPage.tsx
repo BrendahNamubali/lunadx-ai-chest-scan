@@ -163,7 +163,7 @@ export default function LandingPage() {
                 Start using LunaDX today to screen patients faster and prioritize high-risk cases for further testing.
               </p>
               <Link to="/login">
-                <Button variant="secondary" size="lg">Get Started Free</Button>
+                <Button variant="secondary" size="lg" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">Get Started Free</Button>
               </Link>
             </CardContent>
           </Card>

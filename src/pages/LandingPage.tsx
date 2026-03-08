@@ -60,7 +60,7 @@ export default function LandingPage() {
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
             <Link to="/login">
-              <Button size="sm">Get Started <ChevronRight className="w-4 h-4" /></Button>
+              <Button size="sm" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">Get Started <ChevronRight className="w-4 h-4" /></Button>
             </Link>
           </div>
         </div>

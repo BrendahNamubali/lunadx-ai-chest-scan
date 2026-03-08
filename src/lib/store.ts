@@ -295,6 +295,10 @@ export function getScanUsage(orgId?: string) {
 // ── AI Analysis ────────────────────────────────────────
 
 export async function analyzeXray(imageDataUrl: string): Promise<AIAnalysisResponse> {
+  // Simulate realistic AI processing delay (3-5 seconds)
+  const delay = 3000 + Math.random() * 2000;
+  await new Promise((resolve) => setTimeout(resolve, delay));
+
   try {
     const res = await fetch("/api/analyze-xray", {
       method: "POST",

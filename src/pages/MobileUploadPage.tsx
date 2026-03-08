@@ -166,7 +166,7 @@ export default function MobileUploadPage() {
         <Button
           onClick={handleAnalyze}
           disabled={!patientId || !imageFile || analyzing}
-          className="w-full medical-gradient text-primary-foreground border-0 hover:opacity-90 h-14 text-base"
+          className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-14 text-base"
         >
           {analyzing ? (
             <span className="flex items-center gap-2">

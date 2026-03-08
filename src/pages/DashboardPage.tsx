@@ -49,7 +49,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-1 space-y-4">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Quick Actions</h2>
           <Link to="/upload">
-            <div className="stat-card medical-gradient text-primary-foreground cursor-pointer group">
+            <div className="stat-card cta-gradient text-cta-foreground cursor-pointer group">
               <FileImage className="w-8 h-8 mb-3 opacity-80" />
               <p className="font-semibold">New X-Ray Scan</p>
               <p className="text-xs opacity-70 mt-1">Upload and analyze a chest X-ray</p>

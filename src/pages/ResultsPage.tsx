@@ -139,6 +139,9 @@ export default function ResultsPage() {
 
   const [notes, setNotes] = useState(scan?.doctorNotes || "");
   const [isEditing, setIsEditing] = useState(!scan?.doctorNotes);
+  const [alertAcknowledged, setAlertAcknowledged] = useState(false);
+
+  const isHighRiskAlert = scan ? (scan.tbRisk > 70 || scan.pneumoniaRisk > 70) : false;
 
   if (!scan)
     return (

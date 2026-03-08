@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Camera, Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, Smartphone } from "lucide-react";
+import { Camera, Upload, FileImage, X, AlertTriangle, Loader2, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";

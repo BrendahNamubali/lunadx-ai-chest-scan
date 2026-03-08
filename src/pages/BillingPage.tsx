@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Check, Zap, Building2, FlaskConical, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import { getScanUsage } from "@/lib/store";
 
 const plans = [
   {

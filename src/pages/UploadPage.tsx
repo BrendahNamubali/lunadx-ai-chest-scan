@@ -271,12 +271,17 @@ export default function UploadPage() {
 
         <Button onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing || assessingQuality} className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm">
           {analyzing ? (
-            <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> Analyzing X-Ray...</span>
+            <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Analyzing…</span>
           ) : (
             <span className="flex items-center gap-2"><FileImage className="w-4 h-4" /> Analyze X-Ray</span>
           )}
         </Button>
       </div>
+
+      {/* Full-screen AI analysis overlay */}
+      <AnimatePresence>
+        {analyzing && <AIAnalysisLoader />}
+      </AnimatePresence>
     </div>
   );
 }

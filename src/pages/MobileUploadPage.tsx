@@ -30,6 +30,16 @@ export default function MobileUploadPage() {
     reader.readAsDataURL(file);
   }, []);
 
+  if (!canUploadScans(user?.role)) {
+    return (
+      <div className="animate-fade-in max-w-lg mx-auto text-center py-20">
+        <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
+        <h1 className="text-xl font-bold text-foreground mb-2">Access Restricted</h1>
+        <p className="text-sm text-muted-foreground">Only Radiologists and Admins can upload scans.</p>
+      </div>
+    );
+  }
+
   const clearImage = () => {
     setImageFile(null);
     setPreview(null);

@@ -196,25 +196,228 @@ export default function ResultsPage() {
       </div>
     );
 
+  const org = user ? getOrganization(user.orgId) : undefined;
+
   const exportPDF = () => {
     const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("LunaDX Clinical Report", 20, 20);
-    doc.setFontSize(10);
-    doc.text(`Patient: ${scan.patientName}`, 20, 32);
-    doc.text(`Date: ${new Date(scan.scanDate).toLocaleDateString()}`, 20, 38);
-    doc.text(`Risk: ${scan.riskLevel} | TB: ${scan.tbRisk}% | Pneumonia: ${scan.pneumoniaRisk}%`, 20, 48);
-    doc.setFontSize(12);
-    doc.text("Findings", 20, 60);
-    doc.setFontSize(10);
-    scan.findings.slice(0, 3).forEach((f, i) => doc.text(`• ${f}`, 24, 68 + i * 6));
-    if (notes.trim()) {
-      doc.setFontSize(12);
-      doc.text("Doctor Notes", 20, 92);
-      doc.setFontSize(10);
-      doc.text(doc.splitTextToSize(notes, 166), 20, 100);
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const contentW = pageW - margin * 2;
+    let y = 15;
+
+    const drawLine = (yPos: number) => {
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      doc.line(margin, yPos, pageW - margin, yPos);
+    };
+
+    const sectionHeader = (title: string, yPos: number) => {
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(11, 42, 74); // Deep Navy
+      doc.text(title.toUpperCase(), margin, yPos);
+      drawLine(yPos + 2);
+      return yPos + 8;
+    };
+
+    // ── Header ──
+    doc.setFillColor(11, 42, 74);
+    doc.rect(0, 0, pageW, 32, "F");
+
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255, 255, 255);
+    doc.text("LunaDX", margin, 14);
+
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(180, 200, 220);
+    doc.text("AI-Assisted Clinical Screening Report", margin, 20);
+
+    if (org) {
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(9);
+      doc.text(org.name, pageW - margin, 14, { align: "right" });
+      doc.setFontSize(7);
+      doc.setTextColor(180, 200, 220);
+      doc.text(org.location, pageW - margin, 20, { align: "right" });
     }
-    doc.save(`LunaDX_Report_${scan.patientName.replace(/\s/g, "_")}.pdf`);
+
+    doc.setFontSize(7);
+    doc.setTextColor(150, 170, 190);
+    doc.text(`Report ID: ${scan.id.slice(0, 8).toUpperCase()}`, margin, 28);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, pageW - margin, 28, { align: "right" });
+
+    y = 42;
+
+    // ── Risk Banner ──
+    const riskColors: Record<string, [number, number, number]> = {
+      High: [220, 38, 38],
+      Medium: [234, 140, 0],
+      Low: [22, 163, 74],
+    };
+    const riskBg: Record<string, [number, number, number]> = {
+      High: [254, 242, 242],
+      Medium: [255, 251, 235],
+      Low: [240, 253, 244],
+    };
+    const [rR, rG, rB] = riskColors[scan.riskLevel];
+    const [bR, bG, bB] = riskBg[scan.riskLevel];
+
+    doc.setFillColor(bR, bG, bB);
+    doc.roundedRect(margin, y, contentW, 16, 3, 3, "F");
+    doc.setDrawColor(rR, rG, rB);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, contentW, 16, 3, 3, "S");
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(rR, rG, rB);
+    doc.text(`${scan.riskLevel.toUpperCase()} RISK`, margin + 6, y + 7);
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(80, 80, 80);
+    const riskDesc = scan.riskLevel === "High" ? "Immediate clinical attention required" : scan.riskLevel === "Medium" ? "Further evaluation recommended" : "No significant findings";
+    doc.text(riskDesc, margin + 6, y + 13);
+
+    // Risk scores on the right
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(rR, rG, rB);
+    doc.text(`TB: ${scan.tbRisk}%  |  PNA: ${scan.pneumoniaRisk}%  |  Score: ${scan.abnormalityScore}%`, pageW - margin - 6, y + 10, { align: "right" });
+
+    y += 24;
+
+    // ── Section 1: Patient Information ──
+    y = sectionHeader("Patient Information", y);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(60, 60, 60);
+
+    const patientInfo = [
+      ["Patient Name", scan.patientName],
+      ["Scan Date", new Date(scan.scanDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })],
+      ["Analyzing Clinician", scan.doctorName],
+      ["Scan ID", scan.id.slice(0, 12).toUpperCase()],
+    ];
+
+    patientInfo.forEach(([label, value], i) => {
+      const col = i % 2 === 0 ? margin : margin + contentW / 2;
+      const row = y + Math.floor(i / 2) * 8;
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(120, 120, 120);
+      doc.text(label + ":", col, row);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(30, 30, 30);
+      doc.text(value, col + doc.getTextWidth(label + ":  "), row);
+    });
+
+    y += Math.ceil(patientInfo.length / 2) * 8 + 6;
+
+    // ── Section 2: AI Screening Results ──
+    y = sectionHeader("AI Screening Results", y);
+
+    const conditions = [
+      { name: "Tuberculosis (TB)", value: scan.tbRisk },
+      { name: "Pneumonia", value: scan.pneumoniaRisk },
+      { name: "Lung Opacity", value: scan.lungOpacityRisk },
+      { name: "Pleural Effusion", value: scan.pleuralEffusionRisk },
+      { name: "Lung Nodules", value: scan.lungNodulesRisk },
+    ];
+
+    conditions.forEach((c, i) => {
+      const rowY = y + i * 9;
+      // Label
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(9);
+      doc.text(c.name, margin, rowY);
+
+      // Progress bar background
+      const barX = margin + 55;
+      const barW = 80;
+      const barH = 4;
+      doc.setFillColor(230, 230, 230);
+      doc.roundedRect(barX, rowY - 3, barW, barH, 2, 2, "F");
+
+      // Progress bar fill
+      const [cR, cG, cB] = c.value > 70 ? [220, 38, 38] : c.value > 40 ? [234, 140, 0] : [22, 163, 74];
+      doc.setFillColor(cR, cG, cB);
+      doc.roundedRect(barX, rowY - 3, (c.value / 100) * barW, barH, 2, 2, "F");
+
+      // Value
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(cR, cG, cB);
+      doc.text(`${c.value}%`, barX + barW + 4, rowY);
+    });
+
+    y += conditions.length * 9 + 6;
+
+    // ── Section 3: Key Findings ──
+    y = sectionHeader("Key Findings", y);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(40, 40, 40);
+    scan.findings.slice(0, 4).forEach((f, i) => {
+      doc.text(`•  ${f}`, margin + 2, y + i * 7);
+    });
+    y += scan.findings.slice(0, 4).length * 7 + 4;
+
+    // ── Section 4: AI Summary ──
+    if (scan.aiSummary) {
+      y = sectionHeader("AI Analysis Summary", y);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(50, 50, 50);
+      const summaryLines = doc.splitTextToSize(scan.aiSummary, contentW - 4);
+      doc.text(summaryLines, margin + 2, y);
+      y += summaryLines.length * 5 + 6;
+    }
+
+    // ── Section 5: Recommended Actions ──
+    if (scan.suggestions.length > 0) {
+      y = sectionHeader("Recommended Next Steps", y);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(40, 40, 40);
+      scan.suggestions.slice(0, 3).forEach((s, i) => {
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(11, 42, 74);
+        doc.text(`${i + 1}.`, margin + 2, y + i * 7);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(40, 40, 40);
+        doc.text(s, margin + 10, y + i * 7);
+      });
+      y += scan.suggestions.slice(0, 3).length * 7 + 4;
+    }
+
+    // ── Section 6: Clinical Notes ──
+    if (notes.trim()) {
+      y = sectionHeader("Clinical Notes", y);
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(40, 40, 40);
+      const noteLines = doc.splitTextToSize(notes, contentW - 4);
+      doc.text(noteLines, margin + 2, y);
+      y += noteLines.length * 5 + 6;
+    }
+
+    // ── Footer ──
+    const footerY = doc.internal.pageSize.getHeight() - 15;
+    drawLine(footerY - 4);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "italic");
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      "⚠ DISCLAIMER: This report is generated by an AI-assisted screening tool and does not constitute a definitive medical diagnosis. All results must be reviewed and confirmed by a qualified healthcare professional.",
+      margin,
+      footerY,
+      { maxWidth: contentW }
+    );
+    doc.text("Powered by LunaDX — AI-Assisted Clinical Screening", pageW / 2, footerY + 8, { align: "center" });
+
+    doc.save(`LunaDX_Report_${scan.patientName.replace(/\s/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   return (

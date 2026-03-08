@@ -47,9 +47,7 @@ const plans = [
 export default function BillingPage() {
   const [showUpgradeMsg, setShowUpgradeMsg] = useState(false);
 
-  const currentPlan = "trial";
-  const scansUsed = 3;
-  const scansTotal = 10;
+  const { used: scansUsed, total: scansTotal, remaining: scansRemaining } = getScanUsage();
   const scansPercent = (scansUsed / scansTotal) * 100;
 
   return (

@@ -183,7 +183,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">Scan Usage</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Trial Plan · {scanUsage.remaining} scans remaining</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{scanUsage.plan.charAt(0).toUpperCase() + scanUsage.plan.slice(1)} Plan · {scanUsage.remaining} scans remaining (org-wide)</p>
             </div>
             <Link to="/billing">
               <Button variant="outline" size="sm" className="text-xs">

@@ -81,6 +81,7 @@ export default function UploadPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [qualityChecks, setQualityChecks] = useState<QualityCheck[] | null>(null);
   const [assessingQuality, setAssessingQuality] = useState(false);

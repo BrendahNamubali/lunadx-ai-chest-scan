@@ -6,54 +6,54 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 215 25% 15%;
+    --background: 0 0% 100%;
+    --foreground: 210 40% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 15%;
+    --card-foreground: 210 40% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 15%;
+    --popover-foreground: 210 40% 14%;
 
-    --primary: 213 70% 45%;
+    --primary: 209 75% 17%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 152 40% 92%;
-    --secondary-foreground: 155 30% 25%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 209 60% 20%;
 
-    --muted: 210 15% 93%;
-    --muted-foreground: 215 12% 50%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 215 16% 47%;
 
-    --accent: 152 35% 48%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 209 75% 17%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 214 20% 88%;
-    --input: 214 20% 88%;
-    --ring: 213 70% 45%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 209 75% 17%;
 
-    --radius: 0.625rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 215 25% 15%;
-    --sidebar-foreground: 210 15% 85%;
-    --sidebar-primary: 213 70% 55%;
+    --sidebar-background: 209 75% 17%;
+    --sidebar-foreground: 210 20% 85%;
+    --sidebar-primary: 199 80% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 20% 22%;
-    --sidebar-accent-foreground: 210 15% 90%;
-    --sidebar-border: 215 20% 25%;
-    --sidebar-ring: 213 70% 55%;
+    --sidebar-accent: 209 55% 24%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 209 50% 25%;
+    --sidebar-ring: 199 80% 55%;
 
-    /* Custom tokens */
-    --warning: 38 92% 50%;
+    /* Risk & status tokens */
+    --warning: 30 90% 50%;
     --warning-foreground: 0 0% 100%;
-    --success: 152 55% 42%;
+    --success: 142 60% 40%;
     --success-foreground: 0 0% 100%;
-    --info: 199 89% 48%;
+    --info: 199 80% 50%;
     --info-foreground: 0 0% 100%;
-    --risk-low: 152 55% 42%;
-    --risk-medium: 38 92% 50%;
+    --risk-low: 142 60% 40%;
+    --risk-medium: 30 90% 50%;
     --risk-high: 0 72% 51%;
   }
 
@@ -69,12 +69,12 @@
 
 @layer utilities {
   .medical-gradient {
-    background: linear-gradient(135deg, hsl(213 70% 45%), hsl(199 89% 48%));
+    background: linear-gradient(135deg, hsl(209 75% 17%), hsl(199 80% 40%));
   }
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm;
   }
   .stat-card {
-    @apply bg-card rounded-xl border border-border/50 shadow-sm p-5 transition-all duration-200 hover:shadow-md;
+    @apply bg-card rounded-xl border border-border/60 shadow-sm p-5 transition-all duration-200 hover:shadow-md;
   }
 }

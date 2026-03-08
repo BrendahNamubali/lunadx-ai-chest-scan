@@ -58,6 +58,9 @@ const DEMO_CASES: DemoCase[] = [
     scan: {
       tbRisk: 15,
       pneumoniaRisk: 78,
+      lungOpacityRisk: 62,
+      pleuralEffusionRisk: 71,
+      lungNodulesRisk: 12,
       abnormalityScore: 71,
       riskLevel: "High",
       findings: ["Patchy consolidation in right middle lobe", "Pleural effusion suspected in left lower zone", "Bilateral hilar lymphadenopathy noted"],

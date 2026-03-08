@@ -14,6 +14,7 @@ import HistoryPage from "./pages/HistoryPage";
 import PatientRecordPage from "./pages/PatientRecordPage";
 import DemoCasesPage from "./pages/DemoCasesPage";
 import SharedReportPage from "./pages/SharedReportPage";
+import MobileUploadPage from "./pages/MobileUploadPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/patients" element={<PatientsPage />} />
             <Route path="/patients/:patientId" element={<PatientRecordPage />} />
             <Route path="/upload" element={<UploadPage />} />
+            <Route path="/mobile-upload" element={<MobileUploadPage />} />
             <Route path="/results/:scanId" element={<ResultsPage />} />
             <Route path="/history" element={<HistoryPage />} />
             <Route path="/demo" element={<DemoCasesPage />} />

@@ -6,44 +6,48 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 40% 14%;
+    --background: 210 33% 98%;
+    --foreground: 220 39% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 40% 14%;
+    --card-foreground: 220 39% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 40% 14%;
+    --popover-foreground: 220 39% 11%;
 
     --primary: 209 75% 17%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
+    --secondary: 210 33% 96%;
     --secondary-foreground: 209 60% 20%;
 
-    --muted: 220 14% 96%;
+    --muted: 210 33% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 209 75% 17%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
+    --border: 214 18% 90%;
+    --input: 214 18% 90%;
     --ring: 209 75% 17%;
 
     --radius: 0.75rem;
 
     --sidebar-background: 209 75% 17%;
     --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 199 80% 55%;
+    --sidebar-primary: 38 92% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 209 55% 24%;
     --sidebar-accent-foreground: 210 20% 92%;
     --sidebar-border: 209 50% 25%;
-    --sidebar-ring: 199 80% 55%;
+    --sidebar-ring: 38 92% 50%;
+
+    /* CTA token */
+    --cta: 38 92% 50%;
+    --cta-foreground: 220 39% 11%;
 
     /* Risk & status tokens */
     --warning: 30 90% 50%;
@@ -69,7 +73,10 @@
 
 @layer utilities {
   .medical-gradient {
-    background: linear-gradient(135deg, hsl(209 75% 17%), hsl(199 80% 40%));
+    background: linear-gradient(135deg, hsl(209 75% 17%), hsl(209 60% 30%));
+  }
+  .cta-gradient {
+    background: linear-gradient(135deg, hsl(38 92% 50%), hsl(38 92% 42%));
   }
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-border/50 shadow-sm;

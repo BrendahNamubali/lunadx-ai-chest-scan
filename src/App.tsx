@@ -17,6 +17,7 @@ import SharedReportPage from "./pages/SharedReportPage";
 import MobileUploadPage from "./pages/MobileUploadPage";
 import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 import TriageQueuePage from "./pages/TriageQueuePage";
+import BillingPage from "./pages/BillingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/demo" element={<DemoCasesPage />} />
             <Route path="/analytics" element={<AnalyticsDashboardPage />} />
             <Route path="/triage" element={<TriageQueuePage />} />
+            <Route path="/billing" element={<BillingPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

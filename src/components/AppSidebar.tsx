@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText } from "lucide-react";
+import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard } from "lucide-react";
 import { getCurrentUser, logout } from "@/lib/store";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
@@ -13,6 +13,7 @@ const navItems = [
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/demo", icon: FlaskConical, label: "Demo Cases" },
   { to: "/history", icon: FileText, label: "Audit Logs" },
+  { to: "/billing", icon: CreditCard, label: "Billing" },
 ];
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {

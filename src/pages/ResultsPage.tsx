@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { getScans, getCurrentUser, updateScanNotes, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
 import LungDiagram from "@/components/LungDiagram";
+import RadiologyViewer from "@/components/RadiologyViewer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -419,29 +420,8 @@ export default function ResultsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
         {/* Left column */}
         <div className="space-y-5">
-          {/* X-ray with heatmap */}
-          <div className="relative stat-card p-0 overflow-hidden">
-            <img
-              src={scan.imageUrl}
-              alt="Chest X-ray"
-              className="w-full max-h-[380px] object-contain bg-foreground/5"
-            />
-            {scan.riskLevel !== "Low" && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-32 h-32 rounded-full bg-destructive/20 blur-xl animate-pulse" />
-                <div
-                  className="absolute w-20 h-24 rounded-full bg-warning/15 blur-lg"
-                  style={{ top: "30%", left: "35%" }}
-                />
-              </div>
-            )}
-            <div className="absolute bottom-3 left-3 bg-foreground/70 backdrop-blur-sm text-background text-[10px] px-2 py-1 rounded">
-              AI Heatmap Overlay{" "}
-              {scan.riskLevel === "Low"
-                ? "(No significant areas)"
-                : "(Suspicious regions highlighted)"}
-            </div>
-          </div>
+          {/* Radiology Viewer */}
+          <RadiologyViewer scan={scan} aiConfidence={aiConfidence} />
 
           {/* Lung Diagram */}
           <LungDiagram scan={scan} />

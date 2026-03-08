@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Check, Zap, Building2, FlaskConical, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
-import { getScanUsage } from "@/lib/store";
+import { getScanUsage, getCurrentUser, getOrganization } from "@/lib/store";
 
 const plans = [
   {
@@ -47,8 +47,9 @@ const plans = [
 export default function BillingPage() {
   const [showUpgradeMsg, setShowUpgradeMsg] = useState(false);
 
-  const currentPlan = "trial";
-  const { used: scansUsed, total: scansTotal, remaining: scansRemaining } = getScanUsage();
+  const user = getCurrentUser();
+  const org = user ? getOrganization(user.orgId) : undefined;
+  const { used: scansUsed, total: scansTotal, remaining: scansRemaining, plan: currentPlan } = getScanUsage();
   const scansPercent = (scansUsed / scansTotal) * 100;
 
   return (
@@ -56,7 +57,7 @@ export default function BillingPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Billing & Subscription</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manage your plan and track scan usage</p>
+        <p className="text-sm text-muted-foreground mt-1">{org?.name ? `${org.name} · ` : ""}Manage your organization plan and scan usage</p>
       </div>
 
       {/* Current Plan Card */}

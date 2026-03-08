@@ -184,6 +184,32 @@ export default function MobileUploadPage() {
           />
         </div>
 
+        {/* Analysis Error */}
+        <AnimatePresence>
+          {analysisError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="rounded-xl border border-destructive/25 bg-destructive/8 p-4 flex items-start gap-3"
+            >
+              <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">AI analysis unavailable. Please try again.</p>
+                <p className="text-xs text-muted-foreground">The analysis service could not process the request.</p>
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" onClick={handleAnalyze} disabled={!patientId || !imageFile}>
+                    Retry Analysis
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { clearImage(); setAnalysisError(false); }}>
+                    Re-upload X-Ray
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Analyze Button */}
         <Button
           onClick={handleAnalyze}
@@ -192,7 +218,7 @@ export default function MobileUploadPage() {
         >
           {analyzing ? (
             <span className="flex items-center gap-2">
-              <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
               Analyzing X-Ray...
             </span>
           ) : (

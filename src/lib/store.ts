@@ -88,6 +88,12 @@ export interface User {
 const PATIENTS_KEY = "lunadx_patients";
 const SCANS_KEY = "lunadx_scans";
 const USER_KEY = "lunadx_user";
+const SCAN_LIMIT = 10; // Trial plan limit
+
+export function getScanUsage() {
+  const scans = getScans();
+  return { used: scans.length, total: SCAN_LIMIT, remaining: Math.max(SCAN_LIMIT - scans.length, 0) };
+}
 
 // Demo users
 const DEMO_USERS: Record<string, User & { password: string }> = {

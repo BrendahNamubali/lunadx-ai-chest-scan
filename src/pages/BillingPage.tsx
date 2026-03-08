@@ -84,9 +84,9 @@ export default function BillingPage() {
                 {scansUsed} / {scansTotal} used
               </span>
             </div>
-            <Progress value={scansPercent} className="h-2.5" />
+            <Progress value={Math.min(scansPercent, 100)} className="h-2.5" />
             <p className="text-xs text-muted-foreground mt-1.5">
-              {scansTotal - scansUsed} scans remaining in your trial
+              {scansRemaining} scans remaining in your trial
             </p>
           </div>
         </CardContent>

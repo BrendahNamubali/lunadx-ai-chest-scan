@@ -28,6 +28,7 @@ const App = () => (
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/patients" element={<PatientsPage />} />
+            <Route path="/patients/:patientId" element={<PatientRecordPage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/results/:scanId" element={<ResultsPage />} />
             <Route path="/history" element={<HistoryPage />} />

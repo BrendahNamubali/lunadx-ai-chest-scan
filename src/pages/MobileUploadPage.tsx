@@ -20,6 +20,7 @@ export default function MobileUploadPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;

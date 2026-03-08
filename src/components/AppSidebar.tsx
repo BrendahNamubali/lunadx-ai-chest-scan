@@ -9,6 +9,7 @@ const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/patients", icon: Users, label: "Patients" },
   { to: "/upload", icon: Upload, label: "New Scan" },
+  { to: "/mobile-upload", icon: Smartphone, label: "Mobile Upload" },
   { to: "/history", icon: History, label: "Scan History" },
 ];
 

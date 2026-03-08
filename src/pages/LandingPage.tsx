@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Upload, Brain, FileText, Users, Activity, ChevronRight, AlertTriangle } from "lucide-react";
-import demoVideo from "@/assets/demo-screening.mp4";
+import PrototypeDemo from "@/components/PrototypeDemo";
 
 const features = [
   {
@@ -133,23 +133,21 @@ export default function LandingPage() {
       </section>
 
       {/* How it works */}
-      <section className="pb-20 px-6">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-4">How It Works</h2>
+      <section className="pb-20 px-6 bg-muted/30">
+        <div className="max-w-5xl mx-auto pt-16">
+          <h2 className="text-3xl font-bold text-center mb-3">See LunaDX in Action</h2>
           <p className="text-muted-foreground text-center max-w-xl mx-auto mb-10">
-            See the AI screening process in action — from X-ray upload to risk assessment in seconds.
+            Watch the full screening workflow — from patient registration to downloadable clinical report — in under a minute.
           </p>
 
-          {/* Demo Video */}
-          <div className="rounded-xl overflow-hidden border border-border shadow-lg mb-14">
-            <video
-              src={demoVideo}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full aspect-video object-cover bg-black"
-            />
+          <PrototypeDemo />
+
+          <div className="flex justify-center mt-8 mb-14">
+            <Link to="/login">
+              <Button size="lg" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">
+                Request a Demo <ChevronRight className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-8">

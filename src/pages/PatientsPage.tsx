@@ -61,7 +61,7 @@ export default function PatientsPage() {
       ) : (
         <div className="grid gap-3">
           {filtered.map((p) => (
-            <div key={p.id} className="stat-card flex items-center justify-between">
+            <Link key={p.id} to={`/patients/${p.id}`} className="stat-card flex items-center justify-between cursor-pointer hover:shadow-md transition-shadow">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                   {p.name.charAt(0)}
@@ -78,7 +78,7 @@ export default function PatientsPage() {
                 <Button variant="ghost" size="icon" onClick={() => openEdit(p)} title="Edit"><Edit2 className="w-4 h-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)} title="Delete"><Trash2 className="w-4 h-4 text-destructive" /></Button>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

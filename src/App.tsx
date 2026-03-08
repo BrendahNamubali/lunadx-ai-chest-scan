@@ -12,6 +12,7 @@ import UploadPage from "./pages/UploadPage";
 import ResultsPage from "./pages/ResultsPage";
 import HistoryPage from "./pages/HistoryPage";
 import PatientRecordPage from "./pages/PatientRecordPage";
+import DemoCasesPage from "./pages/DemoCasesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/results/:scanId" element={<ResultsPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/demo" element={<DemoCasesPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

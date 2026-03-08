@@ -15,6 +15,7 @@ import PatientRecordPage from "./pages/PatientRecordPage";
 import DemoCasesPage from "./pages/DemoCasesPage";
 import SharedReportPage from "./pages/SharedReportPage";
 import MobileUploadPage from "./pages/MobileUploadPage";
+import AnalyticsDashboardPage from "./pages/AnalyticsDashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

@@ -139,5 +139,5 @@ export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName
   const findings = allFindings.sort(() => Math.random() - 0.5).slice(0, numFindings);
   const suggestions = allSuggestions.sort(() => Math.random() - 0.5).slice(0, numFindings + 1);
 
-  return { tbRisk, pneumoniaRisk, abnormalityScore: Math.min(abnormalityScore, 100), riskLevel, findings, suggestions };
+  return { tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk, abnormalityScore: Math.min(abnormalityScore, 100), riskLevel, findings, suggestions };
 }

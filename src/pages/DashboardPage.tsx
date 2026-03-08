@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Activity, Users, AlertTriangle, FileImage, ArrowRight, Play } from "lucide-react";
+import { Activity, Users, AlertTriangle, FileImage, ArrowRight, Play, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { getCurrentUser, getPatients, getScans } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";

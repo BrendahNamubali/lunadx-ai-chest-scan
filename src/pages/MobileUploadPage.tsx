@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Camera, Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, Smartphone } from "lucide-react";
+import { Camera, Upload, FileImage, X, AlertTriangle, Loader2, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export default function MobileUploadPage() {
   const [preview, setPreview] = useState<string | null>(null);
   const [clinicalNotes, setClinicalNotes] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(false);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -37,37 +38,43 @@ export default function MobileUploadPage() {
   const handleAnalyze = async () => {
     if (!patientId || !imageFile) return;
     setAnalyzing(true);
+    setAnalysisError(false);
     const patient = patients.find((p) => p.id === patientId)!;
 
-    const aiResponse = await analyzeXray(preview!);
-    const sim = simulateAI();
+    try {
+      const aiResponse = await analyzeXray(preview!);
+      const sim = simulateAI();
 
-    const scan: ScanResult = {
-      id: crypto.randomUUID(),
-      patientId,
-      patientName: patient.name,
-      imageUrl: preview!,
-      tbRisk: aiResponse.tb_probability,
-      pneumoniaRisk: aiResponse.pneumonia_probability,
-      lungOpacityRisk: sim.lungOpacityRisk,
-      pleuralEffusionRisk: sim.pleuralEffusionRisk,
-      lungNodulesRisk: sim.lungNodulesRisk,
-      abnormalityScore: Math.min(
-        Math.round(aiResponse.tb_probability * 0.3 + aiResponse.pneumonia_probability * 0.2 + sim.lungOpacityRisk * 0.2 + sim.pleuralEffusionRisk * 0.15 + sim.lungNodulesRisk * 0.15),
-        100
-      ),
-      riskLevel: Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 70 ? "High" : Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 40 ? "Medium" : "Low",
-      findings: sim.findings,
-      suggestions: sim.suggestions,
-      aiSummary: aiResponse.ai_summary,
-      heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
-      scanDate: new Date().toISOString(),
-      doctorName: user?.name || "Unknown",
-      doctorNotes: clinicalNotes || undefined,
-    };
-    saveScan(scan);
-    setAnalyzing(false);
-    navigate(`/results/${scan.id}`);
+      const scan: ScanResult = {
+        id: crypto.randomUUID(),
+        patientId,
+        patientName: patient.name,
+        imageUrl: preview!,
+        tbRisk: aiResponse.tb_probability,
+        pneumoniaRisk: aiResponse.pneumonia_probability,
+        lungOpacityRisk: sim.lungOpacityRisk,
+        pleuralEffusionRisk: sim.pleuralEffusionRisk,
+        lungNodulesRisk: sim.lungNodulesRisk,
+        abnormalityScore: Math.min(
+          Math.round(aiResponse.tb_probability * 0.3 + aiResponse.pneumonia_probability * 0.2 + sim.lungOpacityRisk * 0.2 + sim.pleuralEffusionRisk * 0.15 + sim.lungNodulesRisk * 0.15),
+          100
+        ),
+        riskLevel: Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 70 ? "High" : Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 40 ? "Medium" : "Low",
+        findings: sim.findings,
+        suggestions: sim.suggestions,
+        aiSummary: aiResponse.ai_summary,
+        heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
+        scanDate: new Date().toISOString(),
+        doctorName: user?.name || "Unknown",
+        doctorNotes: clinicalNotes || undefined,
+      };
+      saveScan(scan);
+      setAnalyzing(false);
+      navigate(`/results/${scan.id}`);
+    } catch {
+      setAnalyzing(false);
+      setAnalysisError(true);
+    }
   };
 
   return (
@@ -177,6 +184,32 @@ export default function MobileUploadPage() {
           />
         </div>
 
+        {/* Analysis Error */}
+        <AnimatePresence>
+          {analysisError && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="rounded-xl border border-destructive/25 bg-destructive/8 p-4 flex items-start gap-3"
+            >
+              <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">AI analysis unavailable. Please try again.</p>
+                <p className="text-xs text-muted-foreground">The analysis service could not process the request.</p>
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" onClick={handleAnalyze} disabled={!patientId || !imageFile}>
+                    Retry Analysis
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => { clearImage(); setAnalysisError(false); }}>
+                    Re-upload X-Ray
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Analyze Button */}
         <Button
           onClick={handleAnalyze}
@@ -185,7 +218,7 @@ export default function MobileUploadPage() {
         >
           {analyzing ? (
             <span className="flex items-center gap-2">
-              <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
               Analyzing X-Ray...
             </span>
           ) : (

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { ZoomIn, ZoomOut, RotateCcw, Layers, Activity, Stethoscope, BrainCircuit, ShieldAlert } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, Layers, Activity, Stethoscope, BrainCircuit, ShieldAlert, Sun, Moon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";

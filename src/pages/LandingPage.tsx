@@ -60,7 +60,7 @@ export default function LandingPage() {
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
             <Link to="/login">
-              <Button size="sm">Get Started <ChevronRight className="w-4 h-4" /></Button>
+              <Button size="sm" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">Get Started <ChevronRight className="w-4 h-4" /></Button>
             </Link>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/login">
-              <Button size="lg" className="px-8">
+              <Button size="lg" className="px-8 cta-gradient text-cta-foreground border-0 hover:opacity-90">
                 Start Screening <ChevronRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -163,7 +163,7 @@ export default function LandingPage() {
                 Start using LunaDX today to screen patients faster and prioritize high-risk cases for further testing.
               </p>
               <Link to="/login">
-                <Button variant="secondary" size="lg">Get Started Free</Button>
+                <Button variant="secondary" size="lg" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">Get Started Free</Button>
               </Link>
             </CardContent>
           </Card>

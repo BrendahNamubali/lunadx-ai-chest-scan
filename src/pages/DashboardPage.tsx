@@ -63,6 +63,13 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground mt-1">Register a new patient profile</p>
             </div>
           </Link>
+          <Link to="/demo">
+            <div className="stat-card cursor-pointer group mt-3 border-dashed border-2">
+              <Play className="w-6 h-6 mb-2 text-accent" />
+              <p className="font-semibold text-foreground">Open Demo Cases</p>
+              <p className="text-xs text-muted-foreground mt-1">Explore preloaded clinical scenarios</p>
+            </div>
+          </Link>
         </div>
 
         <div className="lg:col-span-2">

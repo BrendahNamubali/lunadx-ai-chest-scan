@@ -33,6 +33,7 @@ const App = () => (
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/results/:scanId" element={<ResultsPage />} />
             <Route path="/history" element={<HistoryPage />} />
+            <Route path="/demo" element={<DemoCasesPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

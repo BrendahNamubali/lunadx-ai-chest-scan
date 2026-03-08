@@ -7,6 +7,8 @@ import RiskBadge from "@/components/RiskBadge";
 import LungDiagram from "@/components/LungDiagram";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import jsPDF from "jspdf";
 
 /* ─── Risk Gauge ─────────────────────────────────────── */

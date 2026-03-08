@@ -268,6 +268,21 @@ export default function ResultsPage() {
         </Card>
       </div>
 
+      {/* AI Summary */}
+      {scan.aiSummary && (
+        <Card className="mt-5">
+          <CardContent className="pt-5 pb-5">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" />
+              AI Analysis Summary
+            </h2>
+            <p className="text-sm text-foreground leading-relaxed p-3 rounded-lg bg-primary/5 border border-primary/15">
+              {scan.aiSummary}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Key Findings (top 3) */}
       <Card className="mt-5">
         <CardContent className="pt-5 pb-5">

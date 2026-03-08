@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
-import { getPatients, getCurrentUser, simulateAI, saveScan, type ScanResult } from "@/lib/store";
+import { getPatients, getCurrentUser, analyzeXray, simulateAI, saveScan, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -125,15 +125,31 @@ export default function UploadPage() {
   const handleAnalyze = async () => {
     if (!patientId || !imageFile) return;
     setAnalyzing(true);
-    await new Promise((r) => setTimeout(r, 2000));
     const patient = patients.find((p) => p.id === patientId)!;
-    const ai = simulateAI();
+
+    // Call AI analysis API (falls back to demo values)
+    const aiResponse = await analyzeXray(preview!);
+    const sim = simulateAI();
+
     const scan: ScanResult = {
       id: crypto.randomUUID(),
       patientId,
       patientName: patient.name,
       imageUrl: preview!,
-      ...ai,
+      tbRisk: aiResponse.tb_probability,
+      pneumoniaRisk: aiResponse.pneumonia_probability,
+      lungOpacityRisk: sim.lungOpacityRisk,
+      pleuralEffusionRisk: sim.pleuralEffusionRisk,
+      lungNodulesRisk: sim.lungNodulesRisk,
+      abnormalityScore: Math.min(
+        Math.round(aiResponse.tb_probability * 0.3 + aiResponse.pneumonia_probability * 0.2 + sim.lungOpacityRisk * 0.2 + sim.pleuralEffusionRisk * 0.15 + sim.lungNodulesRisk * 0.15),
+        100
+      ),
+      riskLevel: Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 70 ? "High" : Math.max(aiResponse.tb_probability, aiResponse.pneumonia_probability) > 40 ? "Medium" : "Low",
+      findings: sim.findings,
+      suggestions: sim.suggestions,
+      aiSummary: aiResponse.ai_summary,
+      heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
       scanDate: new Date().toISOString(),
       doctorName: user?.name || "Unknown",
     };

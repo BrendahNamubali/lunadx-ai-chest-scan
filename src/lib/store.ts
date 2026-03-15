@@ -1,4 +1,7 @@
-// Simple localStorage-based store for prototype
+// LunaDX store — wired to FastAPI backend (http://127.0.0.1:8000)
+// All UI/auth/patient logic unchanged. Only analyzeXray() is replaced.
+
+const BACKEND = "http://127.0.0.1:8000";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -8,7 +11,7 @@ export interface Organization {
   location: string;
   adminEmail: string;
   createdAt: string;
-  scanLimit: number; // trial = 10
+  scanLimit: number;
   plan: "trial" | "clinic" | "hospital";
 }
 
@@ -75,12 +78,12 @@ export interface AIAnalysisResponse {
 
 // ── Keys ───────────────────────────────────────────────
 
-const ORGS_KEY = "lunadx_orgs";
-const USERS_KEY = "lunadx_org_users";
+const ORGS_KEY    = "lunadx_orgs";
+const USERS_KEY   = "lunadx_org_users";
 const INVITES_KEY = "lunadx_invites";
 const PATIENTS_KEY = "lunadx_patients";
-const SCANS_KEY = "lunadx_scans";
-const USER_KEY = "lunadx_user";
+const SCANS_KEY   = "lunadx_scans";
+const USER_KEY    = "lunadx_user";
 
 // ── Demo data ──────────────────────────────────────────
 
@@ -95,18 +98,14 @@ const DEMO_ORG: Organization = {
 };
 
 const DEMO_USERS: (User & { password: string })[] = [
-  { id: "1", email: "admin@lunadx.com", name: "James Wilson", role: "Admin", orgId: "org-metro", orgName: "Metro Health Clinic", password: "admin123" },
-  { id: "2", email: "doctor@lunadx.com", name: "Dr. Sarah Chen", role: "Radiologist", orgId: "org-metro", orgName: "Metro Health Clinic", password: "doctor123" },
-  { id: "3", email: "clinician@lunadx.com", name: "Dr. Amara Osei", role: "Clinician", orgId: "org-metro", orgName: "Metro Health Clinic", password: "clinician123" },
+  { id: "1", email: "admin@lunadx.com",     name: "James Wilson",   role: "Admin",       orgId: "org-metro", orgName: "Metro Health Clinic", password: "admin123" },
+  { id: "2", email: "doctor@lunadx.com",    name: "Dr. Sarah Chen", role: "Radiologist", orgId: "org-metro", orgName: "Metro Health Clinic", password: "doctor123" },
+  { id: "3", email: "clinician@lunadx.com", name: "Dr. Amara Osei", role: "Clinician",   orgId: "org-metro", orgName: "Metro Health Clinic", password: "clinician123" },
 ];
 
 function ensureDemoData() {
-  if (!localStorage.getItem(ORGS_KEY)) {
-    localStorage.setItem(ORGS_KEY, JSON.stringify([DEMO_ORG]));
-  }
-  if (!localStorage.getItem(USERS_KEY)) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(DEMO_USERS));
-  }
+  if (!localStorage.getItem(ORGS_KEY))  localStorage.setItem(ORGS_KEY,  JSON.stringify([DEMO_ORG]));
+  if (!localStorage.getItem(USERS_KEY)) localStorage.setItem(USERS_KEY, JSON.stringify(DEMO_USERS));
 }
 
 // ── Organization CRUD ──────────────────────────────────
@@ -120,7 +119,9 @@ export function getOrganization(id: string): Organization | undefined {
   return getOrganizations().find((o) => o.id === id);
 }
 
-export function createOrganization(data: { name: string; location: string; adminEmail: string; adminName: string; password: string }): { org: Organization; user: User } {
+export function createOrganization(data: {
+  name: string; location: string; adminEmail: string; adminName: string; password: string;
+}): { org: Organization; user: User } {
   const orgs = getOrganizations();
   const org: Organization = {
     id: `org-${Date.now()}`,
@@ -195,9 +196,7 @@ export function createInvite(orgId: string, email: string, role: UserRole): Invi
   const all: Invite[] = JSON.parse(localStorage.getItem(INVITES_KEY) || "[]");
   const invite: Invite = {
     id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-    orgId,
-    email,
-    role,
+    orgId, email, role,
     status: "pending",
     createdAt: new Date().toISOString(),
   };
@@ -281,7 +280,7 @@ export function updateScanNotes(scanId: string, notes: string) {
   }
 }
 
-// ── Scan Usage (org-level) ─────────────────────────────
+// ── Scan Usage ─────────────────────────────────────────
 
 export function getScanUsage(orgId?: string) {
   const user = getCurrentUser();
@@ -289,47 +288,184 @@ export function getScanUsage(orgId?: string) {
   const org = effectiveOrgId ? getOrganization(effectiveOrgId) : undefined;
   const limit = org?.scanLimit ?? 10;
   const scans = getScans().filter((s) => !effectiveOrgId || s.orgId === effectiveOrgId);
-  return { used: scans.length, total: limit, remaining: Math.max(limit - scans.length, 0), plan: org?.plan ?? "trial" };
+  return {
+    used: scans.length,
+    total: limit,
+    remaining: Math.max(limit - scans.length, 0),
+    plan: org?.plan ?? "trial",
+  };
 }
 
-// ── AI Analysis ────────────────────────────────────────
+// ── PATHOLOGY MAP: CheXNet → LunaDX fields ────────────
+// Backend returns 14 CheXNet pathologies. We map them to
+// the 5 risk scores the UI expects.
 
-export async function analyzeXray(imageDataUrl: string): Promise<AIAnalysisResponse> {
-  // Simulate realistic AI processing delay (3-5 seconds)
+interface BackendFinding {
+  pathology: string;
+  probability: number;
+  severity: string;
+  icd10_code: string;
+}
+
+interface BackendResponse {
+  study_id: string;
+  findings: BackendFinding[];
+  heatmap_b64: string;
+  draft_report: {
+    indication?: string;
+    technique?: string;
+    findings_text?: string;
+    impression?: string;
+    recommendation?: string;
+    source?: string;
+  };
+  processing_time_ms: number;
+  used_simulation: boolean;
+}
+
+function mapBackendToUI(data: BackendResponse, imageDataUrl: string): AIAnalysisResponse {
+  const find = (name: string) =>
+    (data.findings.find((f) => f.pathology === name)?.probability ?? 0) * 100;
+
+  // Map CheXNet pathologies to the 5 UI scores
+  const pneumoniaRisk  = Math.round(Math.max(find("Pneumonia"), find("Consolidation"), find("Infiltration")));
+  const tbRisk         = Math.round(Math.max(find("Fibrosis"), find("Nodule"), find("Mass")));
+  const lungOpacity    = Math.round(Math.max(find("Atelectasis"), find("Edema")));
+  const pleuralEff     = Math.round(find("Effusion"));
+  const lungNodules    = Math.round(Math.max(find("Nodule"), find("Mass")));
+
+  // Build AI summary from draft report
+  const r = data.draft_report;
+  const aiSummary = r.impression
+    ? `${r.impression}${r.recommendation ? " " + r.recommendation : ""}`
+    : `Analysis complete. Pneumonia: ${pneumoniaRisk}%, TB markers: ${tbRisk}%. ${r.findings_text || ""}`;
+
+  // Store heatmap in sessionStorage so ResultsPage can pick it up
+  if (data.heatmap_b64) {
+    sessionStorage.setItem("lunadx_last_heatmap", `data:image/png;base64,${data.heatmap_b64}`);
+    sessionStorage.setItem("lunadx_last_study_id", data.study_id);
+  }
+
+  // Store full findings for display
+  sessionStorage.setItem("lunadx_last_findings", JSON.stringify(data.findings));
+  sessionStorage.setItem("lunadx_last_report", JSON.stringify(data.draft_report));
+
+  return {
+    pneumonia_probability: pneumoniaRisk,
+    tb_probability: tbRisk,
+    heatmap_overlay_url: data.heatmap_b64
+      ? `data:image/png;base64,${data.heatmap_b64}`
+      : null,
+    ai_summary: aiSummary,
+    // Extra fields passed through for UploadPage to build ScanResult
+    _lungOpacityRisk:    lungOpacity,
+    _pleuralEffusionRisk: pleuralEff,
+    _lungNodulesRisk:    lungNodules,
+    _findings:           data.findings
+      .filter((f) => f.severity !== "normal")
+      .map((f) => `${f.pathology}: ${(f.probability * 100).toFixed(0)}% [${f.icd10_code}]`),
+    _suggestions:        buildSuggestions(data.findings),
+    _studyId:            data.study_id,
+    _usedSimulation:     data.used_simulation,
+    _draftReport:        data.draft_report,
+  } as AIAnalysisResponse & Record<string, unknown>;
+}
+
+function buildSuggestions(findings: BackendFinding[]): string[] {
+  const flagged = findings.filter((f) => f.severity === "flagged");
+  const suggestions: string[] = [];
+
+  if (flagged.some((f) => f.pathology === "Pneumothorax"))
+    suggestions.push("URGENT: Possible pneumothorax — immediate review required.");
+  if (flagged.some((f) => ["Pneumonia", "Consolidation"].includes(f.pathology)))
+    suggestions.push("Recommend clinical correlation and possible antibiotic therapy.");
+  if (flagged.some((f) => ["Nodule", "Mass"].includes(f.pathology)))
+    suggestions.push("CT scan recommended for detailed nodule/mass characterisation.");
+  if (flagged.some((f) => f.pathology === "Effusion"))
+    suggestions.push("Consider thoracentesis if effusion is clinically significant.");
+  if (flagged.some((f) => ["Fibrosis", "Emphysema"].includes(f.pathology)))
+    suggestions.push("Pulmonology referral recommended for chronic lung disease evaluation.");
+  if (suggestions.length === 0)
+    suggestions.push("Routine radiologist review. No urgent findings identified.");
+
+  suggestions.push("All AI findings must be reviewed and confirmed by a qualified radiologist.");
+  return suggestions;
+}
+
+// ── AI Analysis — REAL BACKEND ─────────────────────────
+
+export async function analyzeXray(
+  imageDataUrl: string,
+  patientId?: string,
+  clinicalNotes?: string,
+  viewPosition?: string
+): Promise<AIAnalysisResponse> {
+
+  // 1. Try real backend
+  try {
+    const health = await fetch(`${BACKEND}/health`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    if (health.ok) {
+      // Convert dataURL → Blob → FormData
+      const blob = await (await fetch(imageDataUrl)).blob();
+      const ext  = blob.type.includes("png") ? "png" : "jpg";
+      const file = new File([blob], `xray.${ext}`, { type: blob.type });
+
+      const fd = new FormData();
+      fd.append("file", file);
+      if (patientId)     fd.append("patient_id",    patientId);
+      if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
+      fd.append("view_position", viewPosition || "PA");
+
+      const res = await fetch(`${BACKEND}/analyze`, {
+        method: "POST",
+        body: fd,
+        signal: AbortSignal.timeout(60000), // 60s for model inference
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        console.error("Backend error:", err);
+        throw new Error(err);
+      }
+
+      const data: BackendResponse = await res.json();
+      console.log(`✓ LunaDX backend — study ${data.study_id}, ${data.processing_time_ms}ms`);
+      return mapBackendToUI(data, imageDataUrl);
+    }
+  } catch (err) {
+    console.warn("Backend unavailable, using simulation:", err);
+  }
+
+  // 2. Fallback — client-side simulation (unchanged from original)
   const delay = 3000 + Math.random() * 2000;
   await new Promise((resolve) => setTimeout(resolve, delay));
 
-  try {
-    const res = await fetch("/api/analyze-xray", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ image: imageDataUrl }),
-    });
-    if (!res.ok) throw new Error(`API error ${res.status}`);
-    return await res.json();
-  } catch {
-    const sim = simulateAI();
-    const summaries = [
-      `AI screening detected potential abnormalities with ${sim.pneumoniaRisk}% pneumonia probability and ${sim.tbRisk}% tuberculosis probability. ${sim.findings[0]}. ${sim.suggestions[0]}.`,
-      `Analysis indicates ${sim.riskLevel.toLowerCase()} risk. Pneumonia markers at ${sim.pneumoniaRisk}%, TB indicators at ${sim.tbRisk}%. Recommend clinical correlation with patient history.`,
-      `Automated screening complete. Primary concern: ${sim.findings[0]?.toLowerCase() || "no significant findings"}. Confidence scores — Pneumonia: ${sim.pneumoniaRisk}%, TB: ${sim.tbRisk}%. ${sim.suggestions[0]}.`,
-    ];
-    return {
-      pneumonia_probability: sim.pneumoniaRisk,
-      tb_probability: sim.tbRisk,
-      heatmap_overlay_url: null,
-      ai_summary: summaries[Math.floor(Math.random() * summaries.length)],
-    };
-  }
+  const sim = simulateAI();
+  const summaries = [
+    `AI screening detected potential abnormalities with ${sim.pneumoniaRisk}% pneumonia probability and ${sim.tbRisk}% tuberculosis probability. ${sim.findings[0]}. ${sim.suggestions[0]}.`,
+    `Analysis indicates ${sim.riskLevel.toLowerCase()} risk. Pneumonia markers at ${sim.pneumoniaRisk}%, TB indicators at ${sim.tbRisk}%. Recommend clinical correlation with patient history.`,
+    `Automated screening complete. Primary concern: ${sim.findings[0]?.toLowerCase() || "no significant findings"}. Confidence scores — Pneumonia: ${sim.pneumoniaRisk}%, TB: ${sim.tbRisk}%. ${sim.suggestions[0]}.`,
+  ];
+
+  return {
+    pneumonia_probability: sim.pneumoniaRisk,
+    tb_probability: sim.tbRisk,
+    heatmap_overlay_url: null,
+    ai_summary: summaries[Math.floor(Math.random() * summaries.length)],
+  };
 }
 
+// ── simulateAI (unchanged) ─────────────────────────────
+
 export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName" | "imageUrl" | "scanDate" | "doctorName"> {
-  const tbRisk = Math.round(Math.random() * 100);
-  const pneumoniaRisk = Math.round(Math.random() * 100);
-  const lungOpacityRisk = Math.round(Math.random() * 100);
+  const tbRisk             = Math.round(Math.random() * 100);
+  const pneumoniaRisk      = Math.round(Math.random() * 100);
+  const lungOpacityRisk    = Math.round(Math.random() * 100);
   const pleuralEffusionRisk = Math.round(Math.random() * 100);
-  const lungNodulesRisk = Math.round(Math.random() * 100);
-  const abnormalityScore = Math.round((tbRisk * 0.3 + pneumoniaRisk * 0.2 + lungOpacityRisk * 0.2 + pleuralEffusionRisk * 0.15 + lungNodulesRisk * 0.15));
+  const lungNodulesRisk    = Math.round(Math.random() * 100);
+  const abnormalityScore   = Math.round(tbRisk * 0.3 + pneumoniaRisk * 0.2 + lungOpacityRisk * 0.2 + pleuralEffusionRisk * 0.15 + lungNodulesRisk * 0.15);
   const maxRisk = Math.max(tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk);
   const riskLevel: "Low" | "Medium" | "High" = maxRisk > 70 ? "High" : maxRisk > 40 ? "Medium" : "Low";
 
@@ -355,13 +491,18 @@ export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName
   ];
 
   const numFindings = riskLevel === "High" ? 3 : riskLevel === "Medium" ? 2 : 1;
-  const findings = allFindings.sort(() => Math.random() - 0.5).slice(0, numFindings);
+  const findings    = allFindings.sort(() => Math.random() - 0.5).slice(0, numFindings);
   const suggestions = allSuggestions.sort(() => Math.random() - 0.5).slice(0, numFindings + 1);
 
-  return { tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk, abnormalityScore: Math.min(abnormalityScore, 100), riskLevel, findings, suggestions };
+  return {
+    tbRisk, pneumoniaRisk, lungOpacityRisk, pleuralEffusionRisk, lungNodulesRisk,
+    abnormalityScore: Math.min(abnormalityScore, 100),
+    riskLevel, findings, suggestions,
+  };
 }
 
-// ── Role-based access helpers ──────────────────────────
+// ── Role helpers (unchanged) ───────────────────────────
+
 export function canUploadScans(role?: UserRole): boolean {
   return role === "Admin" || role === "Radiologist";
 }

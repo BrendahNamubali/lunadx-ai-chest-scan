@@ -1,0 +1,26 @@
+# FastAPI and web server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Database (SQLite only for easy setup)
+sqlalchemy==2.0.23
+alembic==1.12.1
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Basic dependencies
+pydantic==2.5.0
+python-dotenv==1.0.0
+httpx==0.25.2
+
+# Skip PyTorch for now - will use simulation mode
+# torch
+# torchvision
+# numpy<2.0.0
+# pillow==10.1.0
+# pydicom==2.4.4
+# matplotlib==3.8.2
+# opencv-python==4.8.1.78

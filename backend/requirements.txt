@@ -1,0 +1,41 @@
+# FastAPI and web server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Database (SQLite only for easy setup)
+sqlalchemy==2.0.23
+alembic==1.12.1
+# psycopg2-binary==2.9.7  # Commented out - using SQLite instead
+
+# Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# PyTorch and computer vision (compatible versions)
+torch
+torchvision
+numpy<2.0.0
+pillow==10.1.0
+
+# Medical imaging
+pydicom==2.4.4
+
+# HTTP and API
+httpx==0.25.2
+pydantic==2.5.0
+
+# Image processing and visualization
+matplotlib==3.8.2
+opencv-python==4.8.1.78
+
+# Optional AI APIs (install if you want real AI reports)
+# anthropic==0.7.8
+# groq==0.4.1
+
+# Development
+python-dotenv==1.0.0
+
+# GPU monitoring (optional)
+# nvidia-ml-py3==12.535.133

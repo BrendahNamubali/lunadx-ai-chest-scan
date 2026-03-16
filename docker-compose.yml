@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: lunadx_db
+    environment:
+      POSTGRES_DB: lunadx
+      POSTGRES_USER: lunadx
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lunadx -d lunadx"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching (optional)
+  redis:
+    image: redis:7-alpine
+    container_name: lunadx_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Backend API
+  backend:
+    build: .
+    container_name: lunadx_backend
+    environment:
+      DATABASE_URL: postgresql://lunadx:password@db:5432/lunadx
+      GROQ_API_KEY: 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
+      MODEL_PATH: /app/models/chexnet.pth
+      SIMULATION_MODE: "false"
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - model_data:/app/models
+      - log_data:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Frontend
+  frontend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: lunadx_frontend
+    ports:
+      - "8080:80"
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  model_data:
+    driver: local
+  log_data:
+    driver: local
+
+networks:
+  default:
+    name: lunadx_network

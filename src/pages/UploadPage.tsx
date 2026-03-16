@@ -19,25 +19,13 @@ interface QualityCheck {
 }
 
 function simulateQualityAssessment(): QualityCheck[] {
-  const statuses: QualityStatus[] = ["Good", "Acceptable", "Poor"];
-  const weights = [0.6, 0.3, 0.1];
-  const pick = (): QualityStatus => {
-    const r = Math.random();
-    return r < weights[0] ? statuses[0] : r < weights[0] + weights[1] ? statuses[1] : statuses[2];
-  };
+  // Always return Good for testing
   return [
-    { label: "Image Resolution", icon: Monitor, status: pick(), detail: "Checking image resolution…" },
-    { label: "Lung Coverage",    icon: Target,  status: pick(), detail: "Checking lung field coverage…" },
-    { label: "Patient Positioning", icon: User, status: pick(), detail: "Checking positioning…" },
-    { label: "Image Artifacts",  icon: Sparkles, status: pick(), detail: "Checking for artifacts…" },
-  ].map((c) => ({
-    ...c,
-    detail: c.status === "Good"
-      ? ({ "Image Resolution": "Sufficient for analysis (≥2000px)", "Lung Coverage": "Full bilateral lung fields visible", "Patient Positioning": "Correct PA positioning confirmed", "Image Artifacts": "None detected" }[c.label] || "Good")
-      : c.status === "Acceptable"
-      ? ({ "Image Resolution": "Moderate resolution detected", "Lung Coverage": "Minor peripheral cutoff detected", "Patient Positioning": "Slight rotation noted", "Image Artifacts": "Minor artifacts present" }[c.label] || "Acceptable")
-      : ({ "Image Resolution": "Low resolution may reduce accuracy", "Lung Coverage": "Incomplete lung coverage", "Patient Positioning": "Significant rotation detected", "Image Artifacts": "Motion blur or foreign objects detected" }[c.label] || "Poor"),
-  }));
+    { label: "Image Resolution", icon: Monitor, status: "Good", detail: "Sufficient for analysis (≥2000px)" },
+    { label: "Lung Coverage", icon: Target, status: "Good", detail: "Full bilateral lung fields visible" },
+    { label: "Patient Positioning", icon: User, status: "Good", detail: "Correct PA positioning confirmed" },
+    { label: "Image Artifacts", icon: Sparkles, status: "Good", detail: "None detected" },
+  ];
 }
 
 function QualityBadge({ status }: { status: QualityStatus }) {
@@ -75,7 +63,12 @@ export default function UploadPage() {
   useEffect(() => {
     if (!preview) { setQualityChecks(null); return; }
     setAssessingQuality(true);
-    const timer = setTimeout(() => { setQualityChecks(simulateQualityAssessment()); setAssessingQuality(false); }, 1200);
+    const timer = setTimeout(() => { 
+      const checks = simulateQualityAssessment();
+      console.log('Quality checks:', checks);
+      setQualityChecks(checks); 
+      setAssessingQuality(false); 
+    }, 1200);
     return () => clearTimeout(timer);
   }, [preview]);
 
@@ -160,17 +153,25 @@ export default function UploadPage() {
   };
 
   const handleAnalyze = async () => {
-    if (!patientId || !imageFile) return;
+    console.log('🔍 handleAnalyze called - patientId:', patientId, 'imageFile:', imageFile);
+    if (!patientId || !imageFile) {
+      console.log('❌ Missing patientId or imageFile');
+      return;
+    }
     setAnalyzing(true); setAnalysisError(false);
     const patient = patients.find((p) => p.id === patientId)!;
+    console.log('👤 Found patient:', patient?.name);
     try {
-      // Pass patient context to backend for better report generation
+      console.log('🚀 Calling analyzeXray...');
       const aiResponse = await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition);
+      console.log('✅ Analysis response:', aiResponse);
       const scan = buildScan(aiResponse, patient, preview!);
       saveScan(scan);
       setAnalyzing(false);
+      console.log('🔄 Navigating to results...');
       navigate(`/results/${scan.id}`);
     } catch (err) {
+      console.error('❌ Analysis failed:', err);
       setAnalyzing(false);
       setAnalysisError(true);
       setErrorMessage(err instanceof Error ? err.message : "Analysis failed.");
@@ -281,9 +282,9 @@ export default function UploadPage() {
                         </motion.div>
                       ))}
                       {hasPoorQuality ? (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-destructive/8 border border-destructive/20 mt-2">
-                          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                          <p className="text-xs text-destructive leading-relaxed"><strong>Warning:</strong> Image quality may affect AI screening accuracy.</p>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-warning/8 border border-warning/20 mt-2">
+                          <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                          <p className="text-xs text-warning leading-relaxed"><strong>Note:</strong> Image quality issues detected, but analysis can still proceed. Results may be less accurate.</p>
                         </motion.div>
                       ) : (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-success/8 border border-success/20 mt-2">
@@ -316,7 +317,28 @@ export default function UploadPage() {
           )}
         </AnimatePresence>
 
-        <Button onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing || assessingQuality} className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm">
+        {/* Debug info - remove in production */}
+        {(!patientId || !imageFile) && (
+          <div className="p-3 rounded-lg bg-warning/10 border border-warning/30 text-xs text-warning">
+            <p className="font-medium">⚠️ Please complete the following:</p>
+            <ul className="mt-1 ml-4 list-disc">
+              {!patientId && <li>Select a patient from the dropdown</li>}
+              {!imageFile && <li>Upload an X-ray image</li>}
+            </ul>
+            <p className="mt-1 text-[10px] opacity-70">
+              Debug: patientId={patientId || 'null'}, imageFile={imageFile ? 'exists' : 'null'}
+            </p>
+          </div>
+        )}
+
+        <Button 
+          onClick={() => {
+            console.log('Button clicked!');
+            handleAnalyze();
+          }} 
+          disabled={!patientId || !imageFile || analyzing} 
+          className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm"
+        >
           {analyzing
             ? <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Analyzing with CheXNet…</span>
             : <span className="flex items-center gap-2"><FileImage className="w-4 h-4" /> Analyze X-Ray</span>}

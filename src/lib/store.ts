@@ -429,7 +429,23 @@ try {
 } catch (err) {
   console.warn("CheXpert API failed, using simulation:", err);
 }
+const delay = 3000 + Math.random() * 2000;
+await new Promise((resolve) => setTimeout(resolve, delay));
 
+const sim = simulateAI();
+const summaries = [
+  `AI screening detected potential abnormalities with ${sim.pneumoniaRisk}% pneumonia probability and ${sim.tbRisk}% tuberculosis probability.`,
+  `Analysis indicates ${sim.riskLevel.toLowerCase()} risk. Pneumonia markers at ${sim.pneumoniaRisk}%, TB indicators at ${sim.tbRisk}%.`,
+  `Automated screening complete. Confidence scores — Pneumonia: ${sim.pneumoniaRisk}%, TB: ${sim.tbRisk}%.`,
+];
+
+return {
+  pneumonia_probability: sim.pneumoniaRisk,
+  tb_probability: sim.tbRisk,
+  heatmap_overlay_url: null,
+  ai_summary: summaries[Math.floor(Math.random() * summaries.length)],
+};
+}
   // 2. Fallback — client-side simulation (unchanged from original)
   const delay = 3000 + Math.random() * 2000;
   await new Promise((resolve) => setTimeout(resolve, delay));

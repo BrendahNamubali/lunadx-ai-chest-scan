@@ -1,24 +1,14 @@
 import React, { useState } from "react";
+
 async function callCheXpert(file: File) {
   const response = await fetch("/api/chexpert", {
     method: "POST",
-    body: file,
+    body: file, // backend handles buffer conversion
   });
 
   return await response.json();
 }
-    {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer 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",
-        "Content-Type": "application/octet-stream",
-      },
-      body: file,
-    }
-  );
 
-  return await response.json();
-}
 export default function Scan() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -28,26 +18,26 @@ export default function Scan() {
       <h1>LunaDX Chest X-Ray Scan</h1>
 
       <input
-  type="file"
-  accept="image/*"
-  onChange={async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+        type="file"
+        accept="image/*"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
 
-    setLoading(true);
-    setResults(null);
+          setLoading(true);
+          setResults(null);
 
-    try {
-      const data = await callCheXpert(file);
-      setResults(data);
-      console.log("AI RESULT:", data);
-    } catch (err) {
-      console.error(err);
-    }
+          try {
+            const data = await callCheXpert(file);
+            setResults(data);
+            console.log("AI RESULT:", data);
+          } catch (err) {
+            console.error("Upload failed:", err);
+          }
 
-    setLoading(false);
-  }}
-/>
+          setLoading(false);
+        }}
+      />
 
       {loading && <p>Analyzing X-ray...</p>}
 
@@ -59,3 +49,4 @@ export default function Scan() {
       )}
     </div>
   );
+}

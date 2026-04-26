@@ -1,7 +1,7 @@
 // LunaDX store — wired to FastAPI backend (http://127.0.0.1:8000)
 // All UI/auth/patient logic unchanged. Only analyzeXray() is replaced.
 
-const BACKEND = "http://127.0.0.1:8000";
+const BACKEND = "/api";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -401,42 +401,34 @@ export async function analyzeXray(
   viewPosition?: string
 ): Promise<AIAnalysisResponse> {
 
-  // 1. Try real backend
-  try {
-    const health = await fetch(`${BACKEND}/health`, {
-      signal: AbortSignal.timeout(3000),
-    });
-    if (health.ok) {
-      // Convert dataURL → Blob → FormData
-      const blob = await (await fetch(imageDataUrl)).blob();
-      const ext  = blob.type.includes("png") ? "png" : "jpg";
-      const file = new File([blob], `xray.${ext}`, { type: blob.type });
+try {
+  const blob = await (await fetch(imageDataUrl)).blob();
+  const ext = blob.type.includes("png") ? "png" : "jpg";
+  const file = new File([blob], `xray.${ext}`, { type: blob.type });
 
-      const fd = new FormData();
-      fd.append("file", file);
-      if (patientId)     fd.append("patient_id",    patientId);
-      if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
-      fd.append("view_position", viewPosition || "PA");
+  const fd = new FormData();
+  fd.append("file", file);
+  if (patientId) fd.append("patient_id", patientId);
+  if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
+  fd.append("view_position", viewPosition || "PA");
 
-      const res = await fetch(`${BACKEND}/analyze`, {
-        method: "POST",
-        body: fd,
-        signal: AbortSignal.timeout(60000), // 60s for model inference
-      });
+  const res = await fetch(`${BACKEND}/chexpert`, {
+    method: "POST",
+    body: fd,
+  });
 
-      if (!res.ok) {
-        const err = await res.text();
-        console.error("Backend error:", err);
-        throw new Error(err);
-      }
-
-      const data: BackendResponse = await res.json();
-      console.log(`✓ LunaDX backend — study ${data.study_id}, ${data.processing_time_ms}ms`);
-      return mapBackendToUI(data, imageDataUrl);
-    }
-  } catch (err) {
-    console.warn("Backend unavailable, using simulation:", err);
+  if (!res.ok) {
+    const err = await res.text();
+    console.error("CheXpert API error:", err);
+    throw new Error(err);
   }
+
+  const data = await res.json();
+  console.log("✓ CheXpert Vercel API connected");
+  return data;
+} catch (err) {
+  console.warn("CheXpert API failed, using simulation:", err);
+}
 
   // 2. Fallback — client-side simulation (unchanged from original)
   const delay = 3000 + Math.random() * 2000;

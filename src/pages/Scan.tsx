@@ -22,7 +22,27 @@ export default function Scan() {
     <div style={{ padding: 40 }}>
       <h1>LunaDX Chest X-Ray Scan</h1>
 
-      <input type="file" accept="image/*" />
+      <input
+  type="file"
+  accept="image/*"
+  onChange={async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setResults(null);
+
+    try {
+      const data = await callCheXpert(file);
+      setResults(data);
+      console.log("AI RESULT:", data);
+    } catch (err) {
+      console.error(err);
+    }
+
+    setLoading(false);
+  }}
+/>
 
       {loading && <p>Analyzing X-ray...</p>}
 

@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 async function callCheXpert(file: File) {
-  const response = await fetch(
-    "https://api-inference.huggingface.co/models/itsomk/chexpert-densenet121",
+  const response = await fetch("/api/chexpert", {
+    method: "POST",
+    body: file,
+  });
+
+  return await response.json();
+}
     {
       method: "POST",
       headers: {

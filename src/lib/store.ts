@@ -55,6 +55,18 @@ export async function analyzeXray(
       };
     }
 
+    // ── Role helpers (FIX FOR BUILD ERROR) ─────────────────────
+
+export type UserRole = "Admin" | "Radiologist" | "Clinician";
+
+export function canUploadScans(role?: UserRole): boolean {
+  return role === "Admin" || role === "Radiologist";
+}
+
+export function canManageOrganization(role?: UserRole): boolean {
+  return role === "Admin";
+}
+
     // If backend fails → fallback
     throw new Error("Backend failed");
   } catch (err) {

@@ -1,17 +1,10 @@
-// LunaDX store — backend wired via /api/chexpert
+// LunaDX Store (Clean Restart Version)
 
 const BACKEND = "/api";
 
-// ── Types ──────────────────────────────────────────────
-
-export interface AIAnalysisResponse {
-  pneumonia_probability: number;
-  tb_probability: number;
-  heatmap_overlay_url: string | null;
-  ai_summary: string;
-}
-
-// ── Basic User/Auth Helpers required by UI ─────────────────────
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
 
 export type UserRole = "Admin" | "Radiologist" | "Clinician";
 
@@ -22,7 +15,39 @@ export interface User {
   role: UserRole;
 }
 
+export interface Patient {
+  id: string;
+  name: string;
+  age?: number;
+  sex?: string;
+  createdAt: string;
+}
+
+export interface Scan {
+  id: string;
+  patientId: string;
+  createdAt: string;
+  result?: any;
+}
+
+export interface AIAnalysisResponse {
+  pneumonia_probability: number;
+  tb_probability: number;
+  heatmap_overlay_url: string | null;
+  ai_summary: string;
+}
+
+// ─────────────────────────────────────────────
+// Local Storage Keys
+// ─────────────────────────────────────────────
+
 const USER_KEY = "lunadx_current_user";
+const PATIENTS_KEY = "lunadx_patients";
+const SCANS_KEY = "lunadx_scans";
+
+// ─────────────────────────────────────────────
+// Auth
+// ─────────────────────────────────────────────
 
 export function getCurrentUser(): User | null {
   const raw = localStorage.getItem(USER_KEY);
@@ -39,22 +64,20 @@ export function getCurrentUser(): User | null {
   return JSON.parse(raw);
 }
 
-export function logout() {
-  localStorage.removeItem(USER_KEY);
-}
-
-// ── Minimal Login + Org creation helpers for UI ─────────────────
-
-export function login(email: string, password: string): User | null {
-  const demoUser: User = {
+export function login(email: string, password: string): User {
+  const user: User = {
     id: "1",
-    name: "Demo Admin",
-    email: email || "admin@lunadx.com",
+    name: "Demo User",
+    email,
     role: "Admin",
   };
 
-  localStorage.setItem(USER_KEY, JSON.stringify(demoUser));
-  return demoUser;
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+  return user;
+}
+
+export function logout() {
+  localStorage.removeItem(USER_KEY);
 }
 
 export function createOrganization(data: {
@@ -64,14 +87,14 @@ export function createOrganization(data: {
   adminName: string;
   password: string;
 }) {
-  const newUser: User = {
+  const user: User = {
     id: "1",
     name: data.adminName,
     email: data.adminEmail,
     role: "Admin",
   };
 
-  localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
 
   return {
     org: {
@@ -79,19 +102,48 @@ export function createOrganization(data: {
       name: data.name,
       location: data.location,
     },
-    user: newUser,
+    user,
   };
 }
 
-export function canUploadScans(role?: UserRole): boolean {
+// ─────────────────────────────────────────────
+// Permissions
+// ─────────────────────────────────────────────
+
+export function canUploadScans(role?: UserRole) {
   return role === "Admin" || role === "Radiologist";
 }
 
-export function canManageOrganization(role?: UserRole): boolean {
+export function canManageOrganization(role?: UserRole) {
   return role === "Admin";
 }
 
-// ── AI Analysis ────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Mock Data Layer (for now)
+// ─────────────────────────────────────────────
+
+export function getPatients(): Patient[] {
+  return JSON.parse(localStorage.getItem(PATIENTS_KEY) || "[]");
+}
+
+export function getScans(): Scan[] {
+  return JSON.parse(localStorage.getItem(SCANS_KEY) || "[]");
+}
+
+export function getScanUsage() {
+  const scans = getScans();
+  const limit = 50;
+
+  return {
+    used: scans.length,
+    total: limit,
+    remaining: Math.max(limit - scans.length, 0),
+  };
+}
+
+// ─────────────────────────────────────────────
+// AI Analysis
+// ─────────────────────────────────────────────
 
 export async function analyzeXray(
   imageDataUrl: string,
@@ -99,56 +151,44 @@ export async function analyzeXray(
   clinicalNotes?: string,
   viewPosition?: string
 ): Promise<AIAnalysisResponse> {
+  const blob = await (await fetch(imageDataUrl)).blob();
+  const ext = blob.type.includes("png") ? "png" : "jpg";
+  const file = new File([blob], `xray.${ext}`, { type: blob.type });
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  if (patientId) fd.append("patient_id", patientId);
+  if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
+  fd.append("view_position", viewPosition || "PA");
+
   try {
-    // Convert image → file
-    const blob = await (await fetch(imageDataUrl)).blob();
-    const ext = blob.type.includes("png") ? "png" : "jpg";
-    const file = new File([blob], `xray.${ext}`, { type: blob.type });
-
-    // Build request
-    const fd = new FormData();
-    fd.append("file", file);
-
-    if (patientId) fd.append("patient_id", patientId);
-    if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
-    fd.append("view_position", viewPosition || "PA");
-
-    // Call backend
     const res = await fetch(`${BACKEND}/chexpert`, {
       method: "POST",
       body: fd,
     });
 
-    // If backend works → return real AI result
     if (res.ok) {
       const data = await res.json();
-
-      console.log("✓ CheXpert API success");
 
       return {
         pneumonia_probability: data.pneumonia_probability ?? 0,
         tb_probability: data.tb_probability ?? 0,
         heatmap_overlay_url: data.heatmap_overlay_url ?? null,
-        ai_summary:
-          data.ai_summary ||
-          "AI analysis completed via CheXpert model.",
+        ai_summary: data.ai_summary || "AI analysis completed.",
       };
     }
 
-    // If backend fails → fallback
     throw new Error("Backend failed");
   } catch (err) {
-    console.warn("CheXpert API failed, using fallback:", err);
-
-    // Fallback simulation
-    const pneumonia = Math.round(Math.random() * 100);
-    const tb = Math.round(Math.random() * 100);
+    const p = Math.round(Math.random() * 100);
+    const t = Math.round(Math.random() * 100);
 
     return {
-      pneumonia_probability: pneumonia,
-      tb_probability: tb,
+      pneumonia_probability: p,
+      tb_probability: t,
       heatmap_overlay_url: null,
-      ai_summary: `Fallback analysis complete. Pneumonia: ${pneumonia}%, TB: ${tb}%.`,
+      ai_summary: `Fallback analysis. Pneumonia ${p}%, TB ${t}%.`,
     };
   }
 }

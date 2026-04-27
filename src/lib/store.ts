@@ -11,6 +11,18 @@ export interface AIAnalysisResponse {
   ai_summary: string;
 }
 
+    // ── Role helpers (FIX FOR BUILD ERROR) ─────────────────────
+
+export type UserRole = "Admin" | "Radiologist" | "Clinician";
+
+export function canUploadScans(role?: UserRole): boolean {
+  return role === "Admin" || role === "Radiologist";
+}
+
+export function canManageOrganization(role?: UserRole): boolean {
+  return role === "Admin";
+}
+
 // ── AI Analysis ────────────────────────────────────────
 
 export async function analyzeXray(
@@ -54,18 +66,6 @@ export async function analyzeXray(
           "AI analysis completed via CheXpert model.",
       };
     }
-
-    // ── Role helpers (FIX FOR BUILD ERROR) ─────────────────────
-
-export type UserRole = "Admin" | "Radiologist" | "Clinician";
-
-export function canUploadScans(role?: UserRole): boolean {
-  return role === "Admin" || role === "Radiologist";
-}
-
-export function canManageOrganization(role?: UserRole): boolean {
-  return role === "Admin";
-}
 
     // If backend fails → fallback
     throw new Error("Backend failed");

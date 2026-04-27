@@ -43,6 +43,46 @@ export function logout() {
   localStorage.removeItem(USER_KEY);
 }
 
+// ── Minimal Login + Org creation helpers for UI ─────────────────
+
+export function login(email: string, password: string): User | null {
+  const demoUser: User = {
+    id: "1",
+    name: "Demo Admin",
+    email: email || "admin@lunadx.com",
+    role: "Admin",
+  };
+
+  localStorage.setItem(USER_KEY, JSON.stringify(demoUser));
+  return demoUser;
+}
+
+export function createOrganization(data: {
+  name: string;
+  location: string;
+  adminEmail: string;
+  adminName: string;
+  password: string;
+}) {
+  const newUser: User = {
+    id: "1",
+    name: data.adminName,
+    email: data.adminEmail,
+    role: "Admin",
+  };
+
+  localStorage.setItem(USER_KEY, JSON.stringify(newUser));
+
+  return {
+    org: {
+      id: "org-1",
+      name: data.name,
+      location: data.location,
+    },
+    user: newUser,
+  };
+}
+
 export function canUploadScans(role?: UserRole): boolean {
   return role === "Admin" || role === "Radiologist";
 }

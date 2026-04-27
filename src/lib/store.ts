@@ -11,9 +11,37 @@ export interface AIAnalysisResponse {
   ai_summary: string;
 }
 
-    // ── Role helpers (FIX FOR BUILD ERROR) ─────────────────────
+// ── Basic User/Auth Helpers required by UI ─────────────────────
 
 export type UserRole = "Admin" | "Radiologist" | "Clinician";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+const USER_KEY = "lunadx_current_user";
+
+export function getCurrentUser(): User | null {
+  const raw = localStorage.getItem(USER_KEY);
+
+  if (!raw) {
+    return {
+      id: "1",
+      name: "Demo Admin",
+      email: "admin@lunadx.com",
+      role: "Admin",
+    };
+  }
+
+  return JSON.parse(raw);
+}
+
+export function logout() {
+  localStorage.removeItem(USER_KEY);
+}
 
 export function canUploadScans(role?: UserRole): boolean {
   return role === "Admin" || role === "Radiologist";

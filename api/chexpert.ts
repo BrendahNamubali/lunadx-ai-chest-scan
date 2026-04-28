@@ -1,61 +1,39 @@
-export default async function handler(req, res) {
-  try {
-    // ── 1. Read image buffer (Vercel-safe) ─────────────────────
-    const chunks = [];
-    for await (const chunk of req) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-    // ── 2. Call Hugging Face model ─────────────────────────────
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
+    if (!process.env.HF_TOKEN) {
+      return res.status(500).json({ error: "Missing HF_TOKEN" });
+    }
+
     const response = await fetch(
-      "https://api-inference.huggingface.co/models/itsomk/chexpert-densenet121",
+      "https://api-inference.huggingface.co/models/keremberke/chest-xray-classification",
       {
         method: "POST",
         headers: {
           Authorization: `Bearer ${process.env.HF_TOKEN}`,
           "Content-Type": "application/octet-stream",
         },
-        body: buffer,
+        body: req.body,
       }
     );
 
-    const hf = await response.json();
+    const data = await response.json();
 
-    // ── 3. Safety checks ────────────────────────────────────────
-    if (!Array.isArray(hf) || hf.error || hf[0]?.error) {
-      return res.status(503).json({
-        error: "Model loading or unavailable",
-        raw: hf,
-      });
-    }
-
-    // ── 4. Score helper ─────────────────────────────────────────
-    const getScore = (keywords) =>
-      Math.max(
-        ...keywords.map(
-          (k) =>
-            hf.find((x) => x.label.toLowerCase().includes(k))?.score || 0
-        )
-      );
-
-    // ── 5. Response ─────────────────────────────────────────────
     return res.status(200).json({
-      pneumonia_probability: Math.round(
-        getScore(["pneumonia", "consolidation", "infiltration"]) * 100
-      ),
-      tb_probability: Math.round(
-        getScore(["fibrosis", "nodule", "mass", "opacity"]) * 100
-      ),
-      heatmap_overlay_url: null,
-      ai_summary: "AI analysis completed via CheXNet model.",
+      success: true,
+      model: "keremberke/chest-xray-classification",
+      predictions: data,
     });
 
-  } catch (error) {
-    console.error("CheXpert API error:", error);
-
+  } catch (error: any) {
     return res.status(500).json({
       error: "Inference failed",
+      details: error.message,
     });
   }
 }

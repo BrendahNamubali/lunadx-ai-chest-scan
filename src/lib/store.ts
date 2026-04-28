@@ -156,3 +156,63 @@ export function createOrganization(data: {
     user,
   };
 }
+// ─────────────────────────────
+// SCANS (MISSING EXPORTS FIX)
+// ─────────────────────────────
+
+export function getScans(): Scan[] {
+  return JSON.parse(localStorage.getItem(SCANS_KEY) || "[]");
+}
+
+export function getScanUsage() {
+  const scans = getScans();
+  const limit = 50;
+
+  return {
+    used: scans.length,
+    total: limit,
+    remaining: Math.max(limit - scans.length, 0),
+  };
+}
+
+// ─────────────────────────────
+// PERMISSIONS (MISSING EXPORTS FIX)
+// ─────────────────────────────
+
+export function canUploadScans(role?: UserRole) {
+  return role === "Admin" || role === "Radiologist";
+}
+
+export function canManageOrganization(role?: UserRole) {
+  return role === "Admin";
+}
+
+// ─────────────────────────────
+// ORGANIZATION (MISSING EXPORT)
+// ─────────────────────────────
+
+export function createOrganization(data: {
+  name: string;
+  location: string;
+  adminEmail: string;
+  adminName: string;
+  password: string;
+}) {
+  const user: User = {
+    id: "1",
+    name: data.adminName,
+    email: data.adminEmail,
+    role: "Admin",
+  };
+
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+
+  return {
+    org: {
+      id: "org-1",
+      name: data.name,
+      location: data.location,
+    },
+    user,
+  };
+}

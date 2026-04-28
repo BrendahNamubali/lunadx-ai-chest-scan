@@ -192,3 +192,16 @@ export async function analyzeXray(
     };
   }
 }
+
+export function savePatient(patient: Patient) {
+  const patients = JSON.parse(localStorage.getItem(PATIENTS_KEY) || "[]");
+  patients.push(patient);
+  localStorage.setItem(PATIENTS_KEY, JSON.stringify(patients));
+  return patient;
+}
+
+export function deletePatient(id: string) {
+  const patients = JSON.parse(localStorage.getItem(PATIENTS_KEY) || "[]");
+  const filtered = patients.filter((p: Patient) => p.id !== id);
+  localStorage.setItem(PATIENTS_KEY, JSON.stringify(filtered));
+}

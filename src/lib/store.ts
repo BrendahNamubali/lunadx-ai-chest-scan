@@ -131,3 +131,28 @@ export function canUploadScans(role?: UserRole) {
 export function canManageOrganization(role?: UserRole) {
   return role === "Admin";
 }
+export function createOrganization(data: {
+  name: string;
+  location: string;
+  adminEmail: string;
+  adminName: string;
+  password: string;
+}) {
+  const user = {
+    id: "1",
+    name: data.adminName,
+    email: data.adminEmail,
+    role: "Admin" as const,
+  };
+
+  localStorage.setItem("lunadx_current_user", JSON.stringify(user));
+
+  return {
+    org: {
+      id: "org-1",
+      name: data.name,
+      location: data.location,
+    },
+    user,
+  };
+}

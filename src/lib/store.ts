@@ -125,3 +125,6 @@ export async function analyzeXray(imageDataUrl: string): Promise<AIAnalysisRespo
     };
   }
 }
+export function canUploadScans(role?: UserRole) {
+  return role === "Admin" || role === "Radiologist";
+}

@@ -97,35 +97,21 @@ export default function UploadPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function buildScan(aiResponse: any, patient: { id: string; name: string }, imageUrl: string): ScanResult {
     // If backend returned extra fields, use them; otherwise simulate
-    const sim = simulateAI();
     return {
       id: crypto.randomUUID(),
       patientId: patient.id,
       patientName: patient.name,
       imageUrl,
-      tbRisk:              aiResponse.tb_probability        ?? sim.tbRisk,
-      pneumoniaRisk:       aiResponse.pneumonia_probability ?? sim.pneumoniaRisk,
-      lungOpacityRisk:     aiResponse._lungOpacityRisk      ?? sim.lungOpacityRisk,
-      pleuralEffusionRisk: aiResponse._pleuralEffusionRisk  ?? sim.pleuralEffusionRisk,
-      lungNodulesRisk:     aiResponse._lungNodulesRisk      ?? sim.lungNodulesRisk,
-      abnormalityScore: Math.min(
-        Math.round(
-          (aiResponse.tb_probability        ?? sim.tbRisk)             * 0.3 +
-          (aiResponse.pneumonia_probability ?? sim.pneumoniaRisk)      * 0.2 +
-          (aiResponse._lungOpacityRisk      ?? sim.lungOpacityRisk)    * 0.2 +
-          (aiResponse._pleuralEffusionRisk  ?? sim.pleuralEffusionRisk)* 0.15 +
-          (aiResponse._lungNodulesRisk      ?? sim.lungNodulesRisk)    * 0.15
-        ), 100
-      ),
-      riskLevel: Math.max(
-        aiResponse.tb_probability        ?? 0,
-        aiResponse.pneumonia_probability ?? 0
-      ) > 70 ? "High" : Math.max(
-        aiResponse.tb_probability        ?? 0,
-        aiResponse.pneumonia_probability ?? 0
-      ) > 40 ? "Medium" : "Low",
-      findings:    aiResponse._findings    ?? sim.findings,
-      suggestions: aiResponse._suggestions ?? sim.suggestions,
+      tbRisk: aiResponse.tb_probability,
+      pneumoniaRisk: aiResponse.pneumonia_probability,
+      lungOpacityRisk: aiResponse.lungOpacityRisk || 0,
+      pleuralEffusionRisk: aiResponse.pleuralEffusionRisk || 0,
+      lungNodulesRisk: aiResponse.lungNodulesRisk || 0,
+      abnormalityScore: aiResponse.abnormalityScore || 0,
+      
+      riskLevel: aiResponse.riskLevel || "Low",
+      findings: aiResponse.findings || [],
+      suggestions: aiResponse.suggestions || [],
       aiSummary:   aiResponse.ai_summary,
       heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
       scanDate:    new Date().toISOString(),

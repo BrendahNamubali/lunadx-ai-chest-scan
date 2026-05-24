@@ -1,0 +1,23 @@
+# Environment variables
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Database
+*.db
+*.sqlite
+
+# Model cache
+.cache/
+models/
+
+# OS
+.DS_Store
+*.log

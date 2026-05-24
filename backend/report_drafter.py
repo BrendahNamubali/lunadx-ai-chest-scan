@@ -2,7 +2,7 @@ import os
 import json
 import logging
 from typing import List, Dict, Any, Optional
-from main import Finding
+from schemas import Finding
 
 logger = logging.getLogger(__name__)
 

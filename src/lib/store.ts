@@ -1,7 +1,7 @@
 // LunaDX store — wired to FastAPI backend (http://127.0.0.1:8000)
 // All UI/auth/patient logic unchanged. Only analyzeXray() is replaced.
 
-const BACKEND = "/api";
+const BACKEND = "http://127.0.0.1:8000";
 
 // ── Types ──────────────────────────────────────────────
 
@@ -267,8 +267,17 @@ export function getScans(): ScanResult[] {
 
 export function saveScan(scan: ScanResult) {
   const scans = getScans();
-  scans.unshift(scan);
-  localStorage.setItem(SCANS_KEY, JSON.stringify(scans));
+  // Strip image data before saving — images are too large for localStorage
+  const scanToSave = { ...scan, imageUrl: "" };
+  scans.unshift(scanToSave);
+  // Keep only last 20 scans to prevent quota issues
+  const trimmed = scans.slice(0, 20);
+  try {
+    localStorage.setItem(SCANS_KEY, JSON.stringify(trimmed));
+  } catch (e) {
+    // If still too large, keep only last 5
+    localStorage.setItem(SCANS_KEY, JSON.stringify(trimmed.slice(0, 5)));
+  }
 }
 
 export function updateScanNotes(scanId: string, notes: string) {
@@ -328,17 +337,20 @@ function mapBackendToUI(data: BackendResponse, imageDataUrl: string): AIAnalysis
     (data.findings.find((f) => f.pathology === name)?.probability ?? 0) * 100;
 
   // Map CheXNet pathologies to the 5 UI scores
-  const pneumoniaRisk  = Math.round(Math.max(find("Pneumonia"), find("Consolidation"), find("Infiltration")));
-  const tbRisk         = Math.round(Math.max(find("Fibrosis"), find("Nodule"), find("Mass")));
-  const lungOpacity    = Math.round(Math.max(find("Atelectasis"), find("Edema")));
-  const pleuralEff     = Math.round(find("Effusion"));
-  const lungNodules    = Math.round(Math.max(find("Nodule"), find("Mass")));
+  const pneumoniaRisk  = Math.round(find("Pneumonia") * 100);
+  const tbRisk         = 0;
+  const lungOpacity    = 0;
+  const pleuralEff     = 0;
+  const lungNodules    = 0;
+  const topFinding = [...data.findings].sort((a, b) => b.probability - a.probability)[0];
 
   // Build AI summary from draft report
   const r = data.draft_report;
   const aiSummary = r.impression
     ? `${r.impression}${r.recommendation ? " " + r.recommendation : ""}`
-    : `Analysis complete. Pneumonia: ${pneumoniaRisk}%, TB markers: ${tbRisk}%. ${r.findings_text || ""}`;
+    : topFinding
+    ? `Analysis complete. Primary finding: ${topFinding.pathology} (${Math.round(topFinding.probability * 100)}% confidence).`
+    : "Analysis complete. No significant findings detected.";
 
   // Store heatmap in sessionStorage so ResultsPage can pick it up
   if (data.heatmap_b64) {
@@ -425,7 +437,7 @@ try {
 
   const data = await res.json();
   console.log("✓ CheXpert Vercel API connected");
-  return data;
+  return mapBackendToUI(data, imageDataUrl);
 } catch (err) {
   console.warn("CheXpert API failed, using simulation:", err);
 }

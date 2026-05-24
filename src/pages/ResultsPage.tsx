@@ -17,7 +17,7 @@ const getRiskHsl = (v: number) => (v > 70 ? "hsl(0,72%,51%)" : v > 40 ? "hsl(30,
 
 /* ─── Primary Risk Ring ──────────────────────────────── */
 function PrimaryRiskRing({ scan }: { scan: ScanResult }) {
-  const mainRisk = Math.max(scan.tbRisk, scan.pneumoniaRisk, scan.abnormalityScore);
+  const mainRisk = scan.abnormalityScore;
   const r = 58;
   const c = 2 * Math.PI * r;
   const offset = c - (mainRisk / 100) * c;
@@ -51,9 +51,9 @@ function PrimaryRiskRing({ scan }: { scan: ScanResult }) {
       {/* Sub-scores */}
       <div className="flex gap-6 mt-4 text-center">
         {[
-          { label: "TB", value: scan.tbRisk },
           { label: "Pneumonia", value: scan.pneumoniaRisk },
-          { label: "Abnormality", value: scan.abnormalityScore },
+          { label: "TB (Coming Soon)", value: 0 },
+          { label: "Other Findings", value: scan.abnormalityScore },
         ].map((s) => (
           <div key={s.label}>
             <span className={`text-lg font-bold tabular-nums ${getRiskColor(s.value)}`}>{s.value}%</span>

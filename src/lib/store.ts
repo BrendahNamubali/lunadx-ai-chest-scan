@@ -1,7 +1,7 @@
 // LunaDX store — wired to FastAPI backend (http://127.0.0.1:8000)
 // All UI/auth/patient logic unchanged. Only analyzeXray() is replaced.
 
-const BACKEND = "http://127.0.0.1:8000";
+const BACKEND = "https://breekie-lunadx-backend.hf.space";
 
 // ── Types ──────────────────────────────────────────────
 

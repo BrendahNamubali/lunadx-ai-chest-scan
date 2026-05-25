@@ -98,9 +98,9 @@ const DEMO_ORG: Organization = {
 };
 
 const DEMO_USERS: (User & { password: string })[] = [
-  { id: "1", email: "admin@lunadx.com",     name: "James Wilson",   role: "Admin",       orgId: "org-metro", orgName: "Metro Health Clinic", password: "admin123" },
-  { id: "2", email: "doctor@lunadx.com",    name: "Dr. Sarah Chen", role: "Radiologist", orgId: "org-metro", orgName: "Metro Health Clinic", password: "doctor123" },
-  { id: "3", email: "clinician@lunadx.com", name: "Dr. Amara Osei", role: "Clinician",   orgId: "org-metro", orgName: "Metro Health Clinic", password: "clinician123" },
+  { id: "1", email: "admin@lunadx.com",     name: "LunaDX Admin",   role: "Admin",       orgId: "org-metro", orgName: "Metro Health Clinic", password: "LunaDX@2026!" },
+  { id: "2", email: "doctor@lunadx.com",    name: "Dr. Sarah Malaika", role: "Radiologist", orgId: "org-metro", orgName: "Metro Health Clinic", password: "LunaDX@2026!" },
+  { id: "3", email: "clinician@lunadx.com", name: "Dr. Amara Joan", role: "Clinician",   orgId: "org-metro", orgName: "Metro Health Clinic", password: "LunaDX@2026!" },
 ];
 
 function ensureDemoData() {
@@ -508,7 +508,7 @@ export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName
 // ── Role helpers (unchanged) ───────────────────────────
 
 export function canUploadScans(role?: UserRole): boolean {
-  return role === "Admin" || role === "Radiologist";
+  return role === "Admin" || role === "Radiologist" || role === "Clinician";
 }
 
 export function canManagePatients(role?: UserRole): boolean {

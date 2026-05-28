@@ -639,5 +639,6 @@ export default function ResultsPage() {
       <div className="mt-5 mb-4 p-3 rounded-lg bg-warning/5 border border-warning/20 text-xs text-muted-foreground">
         <strong className="text-foreground">⚠ Disclaimer:</strong> AI-assisted screening — not a definitive diagnosis. Must be reviewed by a qualified healthcare professional.
       </div>
+    </div>
   );
 }

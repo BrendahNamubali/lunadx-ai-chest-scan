@@ -187,6 +187,27 @@ export default function ResultsPage() {
 
   const [notes, setNotes] = useState(scan?.doctorNotes || "");
   const [isEditing, setIsEditing] = useState(!scan?.doctorNotes);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [correctFinding, setCorrectFinding] = useState("");
+
+  const handleFeedback = (type: "correct" | "incorrect") => {
+    const feedback = {
+      scanId: scan.id,
+      patientId: scan.patientId,
+      aiFindings: scan.findings,
+      pneumoniaRisk: scan.pneumoniaRisk,
+      feedbackType: type,
+      correctFinding: type === "incorrect" ? correctFinding : "AI was correct",
+      reviewedBy: scan.doctorName,
+      timestamp: new Date().toISOString(),
+    };
+    const existing = JSON.parse(localStorage.getItem("lunadx_feedback") || "[]");
+    existing.push(feedback);
+    localStorage.setItem("lunadx_feedback", JSON.stringify(existing));
+    setFeedbackSubmitted(true);
+    setShowFeedbackForm(false);
+  };
 
   if (!scan)
     return (
@@ -552,10 +573,71 @@ export default function ResultsPage() {
         </CardContent>
       </Card>
 
+      {/* AI Feedback */}
+      <Card className="mt-5">
+        <CardContent className="pt-5 pb-5">
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-primary" />
+            AI Feedback — Was this result accurate?
+          </h2>
+          {!feedbackSubmitted ? (
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 border-success/40 text-success hover:bg-success/10"
+                  onClick={() => handleFeedback("correct")}
+                >
+                  ✅ Correct — AI finding is accurate
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 border-destructive/40 text-destructive hover:bg-destructive/10"
+                  onClick={() => setShowFeedbackForm(true)}
+                >
+                  ❌ Incorrect — Flag this result
+                </Button>
+              </div>
+              {showFeedbackForm && (
+                <div className="p-3 rounded-lg bg-muted/40 border border-border space-y-3">
+                  <p className="text-xs text-muted-foreground">What is the correct finding?</p>
+                  <select
+                    className="w-full text-sm border border-border rounded-md p-2 bg-background"
+                    value={correctFinding}
+                    onChange={e => setCorrectFinding(e.target.value)}
+                  >
+                    <option value="">Select correct diagnosis...</option>
+                    <option value="Normal">Normal — No significant findings</option>
+                    <option value="Pneumonia">Pneumonia</option>
+                    <option value="Tuberculosis">Tuberculosis (TB)</option>
+                    <option value="Pleural Effusion">Pleural Effusion</option>
+                    <option value="Cardiomegaly">Cardiomegaly</option>
+                    <option value="Pneumothorax">Pneumothorax</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => handleFeedback("incorrect")} disabled={!correctFinding} className="cta-gradient text-cta-foreground border-0">
+                      Submit Feedback
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setShowFeedbackForm(false)}>Cancel</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-success">
+              <CheckCircle className="w-4 h-4" />
+              Thank you — your feedback helps improve the AI model.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Disclaimer */}
       <div className="mt-5 mb-4 p-3 rounded-lg bg-warning/5 border border-warning/20 text-xs text-muted-foreground">
         <strong className="text-foreground">⚠ Disclaimer:</strong> AI-assisted screening — not a definitive diagnosis. Must be reviewed by a qualified healthcare professional.
       </div>
-    </div>
   );
 }

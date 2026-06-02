@@ -60,12 +60,12 @@ export default function PatientRecordPage() {
             <div>
               <p className="text-muted-foreground text-xs">Last Visit</p>
               <p className="font-semibold text-foreground">
-                {scans.length > 0 ? new Date(scans[0].scanDate).toLocaleDateString() : "—"}
+                {scans.length > 0 ? new Date(scans[0].scanDate).toLocaleDateString() : "-"}
               </p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Symptoms</p>
-              <p className="font-semibold text-foreground truncate">{patient.symptoms || "—"}</p>
+              <p className="font-semibold text-foreground truncate">{patient.symptoms || "-"}</p>
             </div>
             <div>
               <p className="text-muted-foreground text-xs">Registered</p>

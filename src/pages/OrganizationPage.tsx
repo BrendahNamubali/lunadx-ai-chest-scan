@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { getCurrentUser, getOrgMembers, getInvites, createInvite, deleteInvite, getOrganization, type UserRole } from "@/lib/store";
+import { getCurrentUser, getOrgMembers, getInvites, createInvite, deleteInvite, getOrganization, type UserRole, type User } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,11 @@ export default function OrganizationPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<UserRole>("Radiologist");
   const { toast } = useToast();
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState<UserRole>("Clinician");
 
   const isAdmin = user?.role === "Admin";
 
@@ -54,6 +59,31 @@ export default function OrganizationPage() {
     deleteInvite(inviteId);
     setInvites(getInvites(user!.orgId));
     toast({ title: "Invite removed" });
+  };
+
+  const handleAddUser = () => {
+    if (!user || !newName || !newEmail || !newPassword) return;
+    const existing = getOrgMembers(user.orgId).find(m => m.email === newEmail);
+    if (existing) {
+      toast({ title: "User already exists", variant: "destructive" });
+      return;
+    }
+    const users = JSON.parse(localStorage.getItem("lunadx_org_users") || "[]");
+    const newUser = {
+      id: `user-${Date.now()}`,
+      email: newEmail,
+      name: newName,
+      role: newRole,
+      orgId: user.orgId,
+      orgName: org!.name,
+      password: newPassword,
+    };
+    users.push(newUser);
+    localStorage.setItem("lunadx_org_users", JSON.stringify(users));
+    setMembers(getOrgMembers(user.orgId));
+    setNewName(""); setNewEmail(""); setNewPassword("");
+    setShowAddUser(false);
+    toast({ title: "User added", description: `${newName} added as ${newRole}` });
   };
 
   if (!org || !user) return null;
@@ -107,13 +137,52 @@ export default function OrganizationPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="w-4 h-4" /> Team Members
-              </CardTitle>
-              <CardDescription>{members.length} active members</CardDescription>
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Users className="w-4 h-4" /> Team Members
+                </CardTitle>
+                <CardDescription>{members.length} active members</CardDescription>
+              </div>
+              {isAdmin && (
+                <Button size="sm" onClick={() => setShowAddUser(!showAddUser)} className="cta-gradient text-cta-foreground border-0">
+                  <Plus className="w-4 h-4 mr-1" /> Add User
+                </Button>
+              )}
             </div>
-          </div>
+            {showAddUser && (
+              <div className="mt-4 p-4 rounded-lg bg-muted/40 border border-border space-y-3">
+                <p className="text-sm font-semibold">Add User Directly</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <Label>Full Name</Label>
+                    <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Dr. Jane Doe" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="jane@hospital.com" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Password</Label>
+                    <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Set a password" className="mt-1" />
+                  </div>
+                  <div>
+                    <Label>Role</Label>
+                    <Select value={newRole} onValueChange={v => setNewRole(v as UserRole)}>
+                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Radiologist">Radiologist</SelectItem>
+                        <SelectItem value="Clinician">Clinician</SelectItem>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleAddUser} className="cta-gradient text-cta-foreground border-0">Add User</Button>
+                  <Button variant="outline" onClick={() => setShowAddUser(false)}>Cancel</Button>
+                </div>
+              </div>
+            )}
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

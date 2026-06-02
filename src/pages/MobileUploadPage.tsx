@@ -174,7 +174,7 @@ export default function MobileUploadPage() {
               </SelectTrigger>
               <SelectContent>
                 {patients.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name} — {p.hospitalId}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>{p.name} - {p.hospitalId}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

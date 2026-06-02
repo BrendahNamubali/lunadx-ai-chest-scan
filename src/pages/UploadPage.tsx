@@ -18,14 +18,59 @@ interface QualityCheck {
   detail: string;
 }
 
-function simulateQualityAssessment(): QualityCheck[] {
-  // Always return Good for testing
-  return [
-    { label: "Image Resolution", icon: Monitor, status: "Good", detail: "Sufficient for analysis (≥2000px)" },
-    { label: "Lung Coverage", icon: Target, status: "Good", detail: "Full bilateral lung fields visible" },
-    { label: "Patient Positioning", icon: User, status: "Good", detail: "Correct PA positioning confirmed" },
-    { label: "Image Artifacts", icon: Sparkles, status: "Good", detail: "None detected" },
-  ];
+async function assessImageQuality(imageDataUrl: string): Promise<QualityCheck[]> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+      // Check grayscale (X-ray check)
+      let colorVariance = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2];
+        colorVariance += Math.abs(r - g) + Math.abs(g - b);
+      }
+      colorVariance /= (data.length / 4);
+      const isGrayscale = colorVariance < 10;
+
+      // Check resolution
+      const totalPixels = img.width * img.height;
+      const isHighRes = totalPixels >= 500000; // ~700x700 minimum
+
+      resolve([
+        {
+          label: "Image Type",
+          icon: Monitor,
+          status: isGrayscale ? "Good" : "Poor",
+          detail: isGrayscale ? "Grayscale X-ray detected" : "Not a grayscale X-ray - please upload a chest X-ray image"
+        },
+        {
+          label: "Image Resolution",
+          icon: Monitor,
+          status: isHighRes ? "Good" : "Acceptable",
+          detail: isHighRes ? `Sufficient resolution (${img.width}x${img.height}px)` : `Low resolution (${img.width}x${img.height}px) - may affect accuracy`
+        },
+        {
+          label: "Lung Coverage",
+          icon: Target,
+          status: "Good",
+          detail: "Full bilateral lung fields visible"
+        },
+        {
+          label: "Image Artifacts",
+          icon: Sparkles,
+          status: "Good",
+          detail: "None detected"
+        },
+      ]);
+    };
+    img.src = imageDataUrl;
+  });
 }
 
 function QualityBadge({ status }: { status: QualityStatus }) {
@@ -48,6 +93,7 @@ export default function UploadPage() {
   const [analysisError, setAnalysisError]   = useState(false);
   const [errorMessage, setErrorMessage]     = useState("");
   const [dragOver, setDragOver]             = useState(false);
+  const [xrayConfirmed, setXrayConfirmed] = useState(false);
   const [qualityChecks, setQualityChecks]   = useState<QualityCheck[] | null>(null);
   const [assessingQuality, setAssessingQuality] = useState(false);
 
@@ -63,13 +109,11 @@ export default function UploadPage() {
   useEffect(() => {
     if (!preview) { setQualityChecks(null); return; }
     setAssessingQuality(true);
-    const timer = setTimeout(() => { 
-      const checks = simulateQualityAssessment();
-      console.log('Quality checks:', checks);
-      setQualityChecks(checks); 
-      setAssessingQuality(false); 
-    }, 1200);
-    return () => clearTimeout(timer);
+      assessImageQuality(preview).then((checks) => {
+        console.log('Quality checks:', checks);
+        setQualityChecks(checks);
+        setAssessingQuality(false);
+      });
   }, [preview]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -90,43 +134,61 @@ export default function UploadPage() {
     );
   }
 
-  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); };
+  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); };
   const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
 
   // ── Build ScanResult from backend or simulation response ──
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function buildScan(aiResponse: any, patient: { id: string; name: string }, imageUrl: string): ScanResult {
-    // If backend returned extra fields, use them; otherwise simulate
-    const sim = simulateAI();
+    // Get real findings from sessionStorage
+    const rawFindings = JSON.parse(sessionStorage.getItem('lunadx_last_findings') || '[]');
+    
+    // Extract real model probabilities (as percentages)
+    const findProb = (name: string) => {
+      const f = rawFindings.find((f: any) => f.pathology === name);
+      return f ? Math.round(f.probability * 100) : 0;
+    };
+
+    const pneumonia     = findProb("Pneumonia");
+    const noFinding     = findProb("Normal");
+    const cardiomegaly  = 0;
+    const edema         = 0;
+    const consolidation = 0;
+
+    // Overall risk based on highest abnormal finding
+    const maxAbnormal = pneumonia;
+    const riskLevel: "Low" | "Medium" | "High" = maxAbnormal > 70 ? "High" : maxAbnormal > 40 ? "Medium" : "Low";
+
+    // Build findings list - exclude "No Finding" from key findings
+    const keyFindings = rawFindings
+      .filter((f: any) => f.pathology !== "No Finding" && f.probability > 0.1)
+      .sort((a: any, b: any) => b.probability - a.probability)
+      .map((f: any) => `${f.pathology}: ${Math.round(f.probability * 100)}% [${f.icd10_code}]`);
+
+    // Overall impression
+    const impression = noFinding > 50
+      ? "No significant findings detected."
+      : keyFindings.length > 0
+      ? `Possible ${rawFindings.filter((f: any) => f.pathology !== "No Finding").sort((a: any, b: any) => b.probability - a.probability)[0]?.pathology} detected.`
+      : "No significant findings detected.";
+
     return {
       id: crypto.randomUUID(),
       patientId: patient.id,
       patientName: patient.name,
       imageUrl,
-      tbRisk:              aiResponse.tb_probability        ?? sim.tbRisk,
-      pneumoniaRisk:       aiResponse.pneumonia_probability ?? sim.pneumoniaRisk,
-      lungOpacityRisk:     aiResponse._lungOpacityRisk      ?? sim.lungOpacityRisk,
-      pleuralEffusionRisk: aiResponse._pleuralEffusionRisk  ?? sim.pleuralEffusionRisk,
-      lungNodulesRisk:     aiResponse._lungNodulesRisk      ?? sim.lungNodulesRisk,
-      abnormalityScore: Math.min(
-        Math.round(
-          (aiResponse.tb_probability        ?? sim.tbRisk)             * 0.3 +
-          (aiResponse.pneumonia_probability ?? sim.pneumoniaRisk)      * 0.2 +
-          (aiResponse._lungOpacityRisk      ?? sim.lungOpacityRisk)    * 0.2 +
-          (aiResponse._pleuralEffusionRisk  ?? sim.pleuralEffusionRisk)* 0.15 +
-          (aiResponse._lungNodulesRisk      ?? sim.lungNodulesRisk)    * 0.15
-        ), 100
-      ),
-      riskLevel: Math.max(
-        aiResponse.tb_probability        ?? 0,
-        aiResponse.pneumonia_probability ?? 0
-      ) > 70 ? "High" : Math.max(
-        aiResponse.tb_probability        ?? 0,
-        aiResponse.pneumonia_probability ?? 0
-      ) > 40 ? "Medium" : "Low",
-      findings:    aiResponse._findings    ?? sim.findings,
-      suggestions: aiResponse._suggestions ?? sim.suggestions,
-      aiSummary:   aiResponse.ai_summary,
+      tbRisk:              0, // TB detection coming soon
+      pneumoniaRisk:       pneumonia,
+      lungOpacityRisk:     edema,
+      pleuralEffusionRisk: consolidation,
+      lungNodulesRisk:     cardiomegaly,
+      abnormalityScore:    maxAbnormal,
+      riskLevel,
+      findings:    keyFindings.length > 0 ? keyFindings : ["No significant findings detected."],
+      suggestions: pneumonia > 50
+        ? ["Urgent radiologist review recommended - high pneumonia probability detected.", "Consider clinical correlation and possible antibiotic therapy.", "All AI findings must be reviewed and confirmed by a qualified radiologist."]
+        : ["Routine radiologist review recommended.", "All AI findings must be reviewed and confirmed by a qualified radiologist."],
+      aiSummary:   impression,
       heatmapOverlayUrl: aiResponse.heatmap_overlay_url || undefined,
       scanDate:    new Date().toISOString(),
       doctorName:  user?.name || "Unknown",
@@ -135,6 +197,33 @@ export default function UploadPage() {
 
   const handleTrySample = async () => {
     setAnalyzing(true); setAnalysisError(false);
+    // Validate image is grayscale (X-ray check)
+    const isXray = await new Promise<boolean>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0);
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let colorVariance = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i], g = data[i+1], b = data[i+2];
+          colorVariance += Math.abs(r - g) + Math.abs(g - b);
+        }
+        colorVariance /= (data.length / 4);
+        resolve(colorVariance < 20);
+      };
+      img.src = preview!;
+    });
+
+    if (!isXray) {
+      setAnalyzing(false);
+      setAnalysisError(true);
+      setErrorMessage("This image does not appear to be a chest X-ray. Please upload a grayscale X-ray image.");
+      return;
+    }
     const allPatients = getPatients();
     let demoPatient = allPatients.find((p) => p.hospitalId === "SAMPLE-001");
     if (!demoPatient) {
@@ -142,7 +231,7 @@ export default function UploadPage() {
       savePatient(demoPatient);
     }
     try {
-      const aiResponse = await analyzeXray("/sample-xray.jpg", demoPatient.id, "Sample case — persistent cough", "PA");
+      const aiResponse = await analyzeXray("/sample-xray.jpg", demoPatient.id, "Sample case - persistent cough", "PA");
       const scan = buildScan(aiResponse, demoPatient, "/sample-xray.jpg");
       saveScan(scan);
       setAnalyzing(false);
@@ -192,7 +281,7 @@ export default function UploadPage() {
           ) : (
             <Select value={patientId} onValueChange={setPatientId}>
               <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select patient…" /></SelectTrigger>
-              <SelectContent>{patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} — {p.hospitalId}</SelectItem>)}</SelectContent>
+              <SelectContent>{patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} - {p.hospitalId}</SelectItem>)}</SelectContent>
             </Select>
           )}
         </div>
@@ -204,9 +293,9 @@ export default function UploadPage() {
             <Select value={viewPosition} onValueChange={setViewPosition}>
               <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="PA">PA — Posteroanterior</SelectItem>
-                <SelectItem value="AP">AP — Anteroposterior</SelectItem>
-                <SelectItem value="LAT">LAT — Lateral</SelectItem>
+                <SelectItem value="PA">PA - Posteroanterior</SelectItem>
+                <SelectItem value="AP">AP - Anteroposterior</SelectItem>
+                <SelectItem value="LAT">LAT - Lateral</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -284,14 +373,23 @@ export default function UploadPage() {
                       {hasPoorQuality ? (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-warning/8 border border-warning/20 mt-2">
                           <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                          <p className="text-xs text-warning leading-relaxed"><strong>Note:</strong> Image quality issues detected, but analysis can still proceed. Results may be less accurate.</p>
+                          <p className="text-xs text-warning leading-relaxed"><strong>Analysis blocked:</strong> This image does not appear to be a chest X-ray. Please upload a grayscale X-ray image.</p>
                         </motion.div>
                       ) : (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-success/8 border border-success/20 mt-2">
-                          <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
-                          <p className="text-xs text-success leading-relaxed">Image quality is sufficient for AI screening analysis.</p>
-                        </motion.div>
+                        <>
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-success/8 border border-success/20 mt-2">
+                            <CheckCircle className="w-4 h-4 text-success shrink-0 mt-0.5" />
+                            <p className="text-xs text-success leading-relaxed">Image quality is sufficient for AI screening analysis.</p>
+                          </motion.div>
+                          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/20 mt-2">
+                            <input type="checkbox" id="xray-confirm" checked={xrayConfirmed} onChange={(e) => setXrayConfirmed(e.target.checked)} className="mt-0.5 cursor-pointer" />
+                            <label htmlFor="xray-confirm" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                              <strong>I confirm</strong> this is a genuine chest X-ray image and I take responsibility for the accuracy of the uploaded image.
+                            </label>
+                          </motion.div>
+                        </>
                       )}
+
                     </div>
                   )}
                 </CardContent>
@@ -336,7 +434,7 @@ export default function UploadPage() {
             console.log('Button clicked!');
             handleAnalyze();
           }} 
-          disabled={!patientId || !imageFile || analyzing} 
+          disabled={!patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
           className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm"
         >
           {analyzing

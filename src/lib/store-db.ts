@@ -375,7 +375,7 @@ export async function analyzeXray(
     }
 
     const data = await res.json();
-    console.log(`✓ LunaDX backend — study ${data.study_id}, ${data.processing_time_ms}ms`);
+    console.log(`✓ LunaDX backend - study ${data.study_id}, ${data.processing_time_ms}ms`);
     
     return {
       pneumonia_probability: data.findings.find((f: any) => f.pathology === "Pneumonia")?.probability || 0,

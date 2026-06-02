@@ -134,7 +134,7 @@ function LandingPage() {
             lineHeight: '1.6',
             marginBottom: '32px'
           }}>
-            LunaDX helps clinicians in resource-limited settings upload chest X-rays and receive AI-supported risk assessments for tuberculosis and pneumonia — in under 30 seconds.
+            LunaDX helps clinicians in resource-limited settings upload chest X-rays and receive AI-supported risk assessments for tuberculosis and pneumonia - in under 30 seconds.
           </p>
           
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>

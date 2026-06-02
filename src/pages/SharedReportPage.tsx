@@ -85,7 +85,7 @@ function generateExplanations(scan: ScanResult): string[] {
     if (fl.includes("opacity")) pool.push("Lung opacity detected suggesting possible infiltrate or mass");
     if (fl.includes("consolidation")) pool.push("Density pattern consistent with alveolar consolidation");
     if (fl.includes("cavitary") || fl.includes("cavitation")) pool.push("Cavitation pattern identified, often associated with TB or abscess");
-    if (fl.includes("miliary")) pool.push("Miliary pattern — small nodular opacities across lung fields");
+    if (fl.includes("miliary")) pool.push("Miliary pattern - small nodular opacities across lung fields");
     if (fl.includes("pleural")) pool.push("Pleural abnormality suggesting fluid accumulation");
     if (fl.includes("lymphadenopathy")) pool.push("Enlarged lymph nodes in hilar region");
   });
@@ -129,7 +129,7 @@ export default function SharedReportPage() {
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("LunaDX — AI Screening Report", 20, 20);
+    doc.text("LunaDX - AI Screening Report", 20, 20);
     doc.setFontSize(9);
     doc.text(`Report ID: ${reportId}  |  Generated: ${reportDate}`, 20, 28);
     doc.setLineWidth(0.4);
@@ -205,7 +205,7 @@ export default function SharedReportPage() {
         </div>
       </div>
 
-      {/* Report body — A4-like container */}
+      {/* Report body - A4-like container */}
       <div className="max-w-[900px] mx-auto px-6 py-8 space-y-0">
 
         {/* ═══ REPORT HEADER ═══ */}

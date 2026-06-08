@@ -96,6 +96,7 @@ export default function UploadPage() {
   const [xrayConfirmed, setXrayConfirmed] = useState(false);
   const [qualityChecks, setQualityChecks]   = useState<QualityCheck[] | null>(null);
   const [assessingQuality, setAssessingQuality] = useState(false);
+  const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb">("pneumonia");
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -231,7 +232,9 @@ export default function UploadPage() {
       savePatient(demoPatient);
     }
     try {
-      const aiResponse = await analyzeXray("/sample-xray.jpg", demoPatient.id, "Sample case - persistent cough", "PA");
+      const aiResponse = analysisType === "tb"
+        ? await analyzeTbXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition)
+        : await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition);
       const scan = buildScan(aiResponse, demoPatient, "/sample-xray.jpg");
       saveScan(scan);
       setAnalyzing(false);
@@ -251,8 +254,10 @@ export default function UploadPage() {
     const patient = patients.find((p) => p.id === patientId)!;
     console.log('👤 Found patient:', patient?.name);
     try {
-      console.log('🚀 Calling analyzeXray...');
-      const aiResponse = await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition);
+      console.log(analysisType === "tb" ? "🚀 Calling analyzeTbXray..." : "🚀 Calling analyzeXray...");
+      const aiResponse = analysisType === "tb"
+        ? await analyzeTbXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition)
+        : await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition);
       console.log('✅ Analysis response:', aiResponse);
       const scan = buildScan(aiResponse, patient, preview!);
       saveScan(scan);
@@ -284,6 +289,19 @@ export default function UploadPage() {
               <SelectContent>{patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} - {p.hospitalId}</SelectItem>)}</SelectContent>
             </Select>
           )}
+        </div>
+
+        <div>
+          <Label>Analysis Type</Label>
+          <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb")}>
+            <SelectTrigger className="mt-1.5">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pneumonia">Pneumonia / General Chest</SelectItem>
+              <SelectItem value="tb">TB Screening</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* View position + clinical notes */}
@@ -437,9 +455,17 @@ export default function UploadPage() {
           disabled={!patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
           className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm"
         >
-          {analyzing
-            ? <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Analyzing with CheXNet…</span>
-            : <span className="flex items-center gap-2"><FileImage className="w-4 h-4" /> Analyze X-Ray</span>}
+          {{analyzing ? (
+             <span className="flex items-center gap-2">
+               <Loader2 className="w-4 h-4 animate-spin" />
+               {analysisType === "tb" ? "Analyzing for TB..." : "Analyzing with CheXNet..."}
+             </span>
+           ) : (
+             <span className="flex items-center gap-2">
+               <FileImage className="w-4 h-4" />
+               {analysisType === "tb" ? "Analyze for TB" : "Analyze X-Ray"}
+             </span>
+          )}
         </Button>
       </div>
 

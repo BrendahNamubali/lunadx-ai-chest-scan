@@ -461,6 +461,49 @@ try {
   };
 }
 
+export async function analyzeTbXray(
+  imageDataUrl: string,
+  patientId?: string,
+  clinicalNotes?: string,
+  viewPosition?: string
+): Promise<AIAnalysisResponse> {
+  try {
+    const blob = await (await fetch(imageDataUrl)).blob();
+    const ext = blob.type.includes("png") ? "png" : "jpg";
+    const file = new File([blob], `xray.${ext}`, { type: blob.type });
+
+    const fd = new FormData();
+    fd.append("file", file);
+    if (patientId) fd.append("patient_id", patientId);
+    if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
+    fd.append("view_position", viewPosition || "PA");
+
+    const res = await fetch(`${BACKEND}/tb`, {
+      method: "POST",
+      body: fd,
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("TB API error:", err);
+      throw new Error(err);
+    }
+
+    const data = await res.json();
+    console.log("✓ TB API connected");
+
+    return {
+      ...mapBackendToUI(data, imageDataUrl),
+      tb_classification: data.classification,
+      tb_probability: data.tb_probability,
+      tb_summary: data.summary,
+    };
+  } catch (err) {
+    console.warn("TB API failed:", err);
+    throw new Error("TB analysis is currently unavailable.");
+  }
+}
+
 // ── simulateAI (unchanged) ─────────────────────────────
 
 export function simulateAI(): Omit<ScanResult, "id" | "patientId" | "patientName" | "imageUrl" | "scanDate" | "doctorName"> {

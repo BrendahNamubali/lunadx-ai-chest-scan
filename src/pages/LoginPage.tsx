@@ -150,7 +150,7 @@ export default function LoginPage() {
                     <Label htmlFor="hospital-name" className="flex items-center gap-1.5">
                       <Building2 className="w-3.5 h-3.5" /> Hospital Name
                     </Label>
-                    <Input id="hospital-name" value={hospitalName} onChange={(e) => setHospitalName(e.target.value)} placeholder="Metro Health Clinic" className="mt-1.5" required />
+                    <Input id="hospital-name" value={hospitalName} onChange={(e) => setHospitalName(e.target.value)} placeholder="Hospital Name" className="mt-1.5" required />
                   </div>
                   <div>
                     <Label htmlFor="location" className="flex items-center gap-1.5">
@@ -162,7 +162,7 @@ export default function LoginPage() {
                     <Label htmlFor="admin-name" className="flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5" /> Admin Name
                     </Label>
-                    <Input id="admin-name" value={adminName} onChange={(e) => setAdminName(e.target.value)} placeholder="Dr. James Wilson" className="mt-1.5" required />
+                    <Input id="admin-name" value={adminName} onChange={(e) => setAdminName(e.target.value)} placeholder="Dr. James Kato" className="mt-1.5" required />
                   </div>
                   <div>
                     <Label htmlFor="admin-email" className="flex items-center gap-1.5">

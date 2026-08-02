@@ -298,7 +298,7 @@ export default function UploadPage() {
           {patients.length === 0 ? (
             <p className="text-sm text-muted-foreground mt-2">No patients registered. <button onClick={() => navigate("/patients")} className="text-primary hover:underline">Add a patient first</button>.</p>
           ) : (
-            <Select value={patientId} onValueChange={setPatientId}>
+            <Select value={patientId} onValueChange={setPatientId} disabled={analyzing}>
               <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select patient…" /></SelectTrigger>
               <SelectContent>{patients.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} - {p.hospitalId}</SelectItem>)}</SelectContent>
             </Select>
@@ -307,7 +307,7 @@ export default function UploadPage() {
 
         <div>
           <Label>Analysis Type</Label>
-          <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb" | "chest")}>
+          <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb" | "chest")} disabled={analyzing}>
             <SelectTrigger className="mt-1.5">
               <SelectValue />
             </SelectTrigger>
@@ -320,7 +320,14 @@ export default function UploadPage() {
         </div>
 
         {analysisType === "chest" && (
-          chestResult ? (
+          analyzing ? (
+            <div className="rounded-lg border border-border bg-muted/40 p-4 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-primary" />
+              <p className="text-xs text-muted-foreground">
+                Running chest findings analysis…
+              </p>
+            </div>
+          ) : chestResult ? (
             <ChestFindingsPanel result={chestResult} />
           ) : (
             <div className="rounded-lg border border-border bg-muted/40 p-4 text-center">
@@ -335,7 +342,7 @@ export default function UploadPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>View Position</Label>
-            <Select value={viewPosition} onValueChange={setViewPosition}>
+            <Select value={viewPosition} onValueChange={setViewPosition} disabled={analyzing}>
               <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="PA">PA - Posteroanterior</SelectItem>
@@ -346,7 +353,7 @@ export default function UploadPage() {
           </div>
           <div>
             <Label>Clinical Notes <span className="text-muted-foreground text-xs">(optional)</span></Label>
-            <Textarea value={clinicalNotes} onChange={(e) => setClinicalNotes(e.target.value)} placeholder="e.g. 45M, cough, fever 3 days…" className="mt-1.5 min-h-[38px] text-sm resize-none" />
+            <Textarea value={clinicalNotes} onChange={(e) => setClinicalNotes(e.target.value)} disabled={analyzing} placeholder="e.g. 45M, cough, fever 3 days…" className="mt-1.5 min-h-[38px] text-sm resize-none" />
           </div>
         </div>
 
@@ -356,7 +363,7 @@ export default function UploadPage() {
           {preview ? (
             <div className="mt-2 relative stat-card p-0 overflow-hidden">
               <img src={preview} alt="X-ray preview" className="w-full max-h-96 object-contain bg-foreground/5" />
-              <button onClick={clearImage} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/80 flex items-center justify-center hover:bg-foreground transition-colors">
+              <button onClick={clearImage} disabled={analyzing} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-foreground/80 flex items-center justify-center hover:bg-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 <X className="w-4 h-4 text-background" />
               </button>
             </div>
@@ -365,14 +372,14 @@ export default function UploadPage() {
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
-                onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
-                onClick={() => document.getElementById("file-input")?.click()}
+                onDrop={analyzing ? undefined : handleDrop}
+                className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors ${analyzing ? "opacity-50 pointer-events-none" : "cursor-pointer"} ${dragOver ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`}
+                onClick={() => { if (!analyzing) document.getElementById("file-input")?.click(); }}
               >
                 <Upload className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
                 <p className="text-sm font-medium text-foreground">Drop X-ray image here or click to browse</p>
                 <p className="text-xs text-muted-foreground mt-1">Supports JPG, PNG, DICOM formats</p>
-                <input id="file-input" type="file" accept="image/*,.dcm,.dicom" className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
+                <input id="file-input" type="file" accept="image/*,.dcm,.dicom" disabled={analyzing} className="hidden" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} />
               </div>
 
               <div className="relative flex items-center justify-center">
@@ -427,7 +434,7 @@ export default function UploadPage() {
                             <p className="text-xs text-success leading-relaxed">Image quality is sufficient for AI screening analysis.</p>
                           </motion.div>
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/20 mt-2">
-                            <input type="checkbox" id="xray-confirm" checked={xrayConfirmed} onChange={(e) => setXrayConfirmed(e.target.checked)} className="mt-0.5 cursor-pointer" />
+                            <input type="checkbox" id="xray-confirm" checked={xrayConfirmed} disabled={analyzing} onChange={(e) => setXrayConfirmed(e.target.checked)} className="mt-0.5 cursor-pointer disabled:cursor-not-allowed" />
                             <label htmlFor="xray-confirm" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
                               <strong>I confirm</strong> this is a genuine chest X-ray image and I take responsibility for the accuracy of the uploaded image.
                             </label>

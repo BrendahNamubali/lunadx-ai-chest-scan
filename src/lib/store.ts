@@ -74,6 +74,8 @@ export interface AIAnalysisResponse {
   tb_probability: number;
   heatmap_overlay_url: string | null;
   ai_summary: string;
+  tb_classification?: string;
+  tb_summary?: string;
 }
 
 // ── Keys ───────────────────────────────────────────────

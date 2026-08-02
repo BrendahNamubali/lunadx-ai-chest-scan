@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
+import ChestFindingsPanel from "@/components/ChestFindingsPanel";
 import { getPatients, getCurrentUser, analyzeXray, analyzeTbXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -96,8 +97,7 @@ export default function UploadPage() {
   const [xrayConfirmed, setXrayConfirmed] = useState(false);
   const [qualityChecks, setQualityChecks]   = useState<QualityCheck[] | null>(null);
   const [assessingQuality, setAssessingQuality] = useState(false);
-  const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb">("pneumonia");
-  const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb">("pneumonia");
+  const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb" | "chest">("pneumonia");
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -234,8 +234,8 @@ export default function UploadPage() {
     }
     try {
       const aiResponse = analysisType === "tb"
-        ? await analyzeTbXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition)
-        : await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition);
+        ? await analyzeTbXray(preview!, demoPatient.id, clinicalNotes || demoPatient.symptoms, viewPosition)
+        : await analyzeXray(preview!, demoPatient.id, clinicalNotes || demoPatient.symptoms, viewPosition);
       const scan = buildScan(aiResponse, demoPatient, "/sample-xray.jpg");
       saveScan(scan);
       setAnalyzing(false);
@@ -294,30 +294,20 @@ export default function UploadPage() {
 
         <div>
           <Label>Analysis Type</Label>
-          <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb")}>
+          <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb" | "chest")}>
             <SelectTrigger className="mt-1.5">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pneumonia">Pneumonia / General Chest</SelectItem>
               <SelectItem value="tb">TB Screening</SelectItem>
+              <SelectItem value="chest">Chest Findings Analysis</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div>
-  <Label>Analysis Type</Label>
-  <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb")}>
-    <SelectTrigger className="mt-1.5">
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="pneumonia">Pneumonia / General Chest</SelectItem>
-      <SelectItem value="tb">TB Screening</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
-        
+        {analysisType === "chest" && <ChestFindingsPanel />}
+
         {/* View position + clinical notes */}
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -466,10 +456,10 @@ export default function UploadPage() {
             console.log('Button clicked!');
             handleAnalyze();
           }} 
-          disabled={!patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
+          disabled={analysisType === "chest" || !patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
           className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm"
         >
-          {{analyzing ? (
+          {analyzing ? (
              <span className="flex items-center gap-2">
                <Loader2 className="w-4 h-4 animate-spin" />
                {analysisType === "tb" ? "Analyzing for TB..." : "Analyzing with CheXNet..."}
@@ -477,7 +467,7 @@ export default function UploadPage() {
            ) : (
              <span className="flex items-center gap-2">
                <FileImage className="w-4 h-4" />
-               {analysisType === "tb" ? "Analyze for TB" : "Analyze X-Ray"}
+               {analysisType === "chest" ? "Chest Findings Analysis — coming soon" : analysisType === "tb" ? "Analyze for TB" : "Analyze X-Ray"}
              </span>
           )}
         </Button>

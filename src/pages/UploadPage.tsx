@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
+import ChestFindingsPanel from "@/components/ChestFindingsPanel";
 import { getPatients, getCurrentUser, analyzeXray, analyzeTbXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -233,8 +234,8 @@ export default function UploadPage() {
     }
     try {
       const aiResponse = analysisType === "tb"
-        ? await analyzeTbXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition)
-        : await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition);
+        ? await analyzeTbXray(preview!, demoPatient.id, clinicalNotes || demoPatient.symptoms, viewPosition)
+        : await analyzeXray(preview!, demoPatient.id, clinicalNotes || demoPatient.symptoms, viewPosition);
       const scan = buildScan(aiResponse, demoPatient, "/sample-xray.jpg");
       saveScan(scan);
       setAnalyzing(false);

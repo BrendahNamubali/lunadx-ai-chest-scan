@@ -78,7 +78,7 @@ export default function LandingPage() {
             Faster lung disease screening where it matters most
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-            LunaDX helps clinicians in resource-limited settings upload chest X-rays and receive AI-supported risk assessments for tuberculosis and pneumonia - in under 30 seconds.
+            LunaDX enables faster X-ray analysis by helping clinicians identify potential abnormalities in under 60 seconds
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/login">
@@ -113,7 +113,7 @@ export default function LandingPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-3">Built for Clinical Workflows</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Every feature is designed to help clinicians screen patients quickly, accurately, and securely.
+              Every feature is designed to help clinicians screen patients quickly, accurately and securely.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -191,7 +191,7 @@ export default function LandingPage() {
           <div className="flex gap-3 p-4 rounded-lg bg-muted text-muted-foreground text-xs leading-relaxed">
             <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
-              <strong>Disclaimer:</strong> LunaDX is an AI-assisted screening tool and does not provide definitive medical diagnoses.
+              <strong>Disclaimer:</strong> LunaDX is an AI-assisted screening tool.
               All results must be reviewed and confirmed by a qualified healthcare professional.
             </p>
           </div>

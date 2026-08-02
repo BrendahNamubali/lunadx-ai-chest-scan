@@ -434,7 +434,7 @@ export default function UploadPage() {
                             <p className="text-xs text-success leading-relaxed">Image quality is sufficient for AI screening analysis.</p>
                           </motion.div>
                           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/20 mt-2">
-                            <input type="checkbox" id="xray-confirm" checked={xrayConfirmed} onChange={(e) => setXrayConfirmed(e.target.checked)} className="mt-0.5 cursor-pointer" />
+                            <input type="checkbox" id="xray-confirm" checked={xrayConfirmed} disabled={analyzing} onChange={(e) => setXrayConfirmed(e.target.checked)} className="mt-0.5 cursor-pointer disabled:cursor-not-allowed" />
                             <label htmlFor="xray-confirm" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
                               <strong>I confirm</strong> this is a genuine chest X-ray image and I take responsibility for the accuracy of the uploaded image.
                             </label>

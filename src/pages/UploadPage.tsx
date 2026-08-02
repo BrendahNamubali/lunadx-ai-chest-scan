@@ -4,6 +4,7 @@ import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
 import ChestFindingsPanel from "@/components/ChestFindingsPanel";
+import { analyzeChestFindings, type ChestFindingsResult } from "@/lib/chestFindings";
 import { getPatients, getCurrentUser, analyzeXray, analyzeTbXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -98,6 +99,7 @@ export default function UploadPage() {
   const [qualityChecks, setQualityChecks]   = useState<QualityCheck[] | null>(null);
   const [assessingQuality, setAssessingQuality] = useState(false);
   const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb" | "chest">("pneumonia");
+  const [chestResult, setChestResult] = useState<ChestFindingsResult | null>(null);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -255,6 +257,16 @@ export default function UploadPage() {
     const patient = patients.find((p) => p.id === patientId)!;
     console.log('👤 Found patient:', patient?.name);
     try {
+      if (analysisType === "chest") {
+        const result = await analyzeChestFindings(preview!, {
+          patientId,
+          clinicalNotes: clinicalNotes || patient.symptoms,
+          viewPosition,
+        });
+        setChestResult(result);
+        setAnalyzing(false);
+        return;
+      }
       console.log(analysisType === "tb" ? "🚀 Calling analyzeTbXray..." : "🚀 Calling analyzeXray...");
       const aiResponse = analysisType === "tb"
         ? await analyzeTbXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition)
@@ -306,7 +318,7 @@ export default function UploadPage() {
           </Select>
         </div>
 
-        {analysisType === "chest" && <ChestFindingsPanel />}
+        {analysisType === "chest" && <ChestFindingsPanel result={chestResult} />}
 
         {/* View position + clinical notes */}
         <div className="grid grid-cols-2 gap-4">
@@ -456,18 +468,18 @@ export default function UploadPage() {
             console.log('Button clicked!');
             handleAnalyze();
           }} 
-          disabled={analysisType === "chest" || !patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
+          disabled={!patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
           className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm"
         >
           {analyzing ? (
              <span className="flex items-center gap-2">
                <Loader2 className="w-4 h-4 animate-spin" />
-               {analysisType === "tb" ? "Analyzing for TB..." : "Analyzing with CheXNet..."}
+               {analysisType === "chest" ? "Running chest findings analysis..." : analysisType === "tb" ? "Analyzing for TB..." : "Analyzing with CheXNet..."}
              </span>
            ) : (
              <span className="flex items-center gap-2">
                <FileImage className="w-4 h-4" />
-               {analysisType === "chest" ? "Chest Findings Analysis — coming soon" : analysisType === "tb" ? "Analyze for TB" : "Analyze X-Ray"}
+               {analysisType === "chest" ? "Run Chest Findings Analysis" : analysisType === "tb" ? "Analyze for TB" : "Analyze X-Ray"}
              </span>
           )}
         </Button>

@@ -20,7 +20,7 @@ const DEMO_CASES: DemoCase[] = [
   {
     title: "Normal Chest X-Ray",
     description: "Healthy adult with no significant pulmonary findings. Routine screening case demonstrating low-risk AI classification.",
-    patient: { name: "John Mwangi", age: 34, sex: "Male", hospitalId: "DEMO-001", symptoms: "Routine checkup, no complaints", visitDate: new Date().toISOString().slice(0, 10) },
+    patient: { name: "John Waiswa", age: 34, sex: "Male", hospitalId: "DEMO-001", symptoms: "Routine checkup, no complaints", visitDate: new Date().toISOString().slice(0, 10) },
     scan: {
       tbRisk: 8,
       pneumoniaRisk: 5,
@@ -37,7 +37,7 @@ const DEMO_CASES: DemoCase[] = [
   {
     title: "Suspected Tuberculosis",
     description: "Patient presenting with persistent cough and weight loss. AI screening identifies upper lobe cavitary lesion consistent with TB.",
-    patient: { name: "Amina Osei", age: 28, sex: "Female", hospitalId: "DEMO-002", symptoms: "Persistent cough (3 weeks), night sweats, weight loss", visitDate: new Date().toISOString().slice(0, 10) },
+    patient: { name: "Amina Namata", age: 28, sex: "Female", hospitalId: "DEMO-002", symptoms: "Persistent cough (3 weeks), night sweats, weight loss", visitDate: new Date().toISOString().slice(0, 10) },
     scan: {
       tbRisk: 87,
       pneumoniaRisk: 22,
@@ -54,7 +54,7 @@ const DEMO_CASES: DemoCase[] = [
   {
     title: "Pneumonia Case",
     description: "Elderly patient with fever and dyspnea. AI screening detects bilateral consolidation and pleural effusion suggestive of pneumonia.",
-    patient: { name: "Robert Kamau", age: 62, sex: "Male", hospitalId: "DEMO-003", symptoms: "High fever, shortness of breath, productive cough", visitDate: new Date().toISOString().slice(0, 10) },
+    patient: { name: "Robert Kato", age: 62, sex: "Male", hospitalId: "DEMO-003", symptoms: "High fever, shortness of breath, productive cough", visitDate: new Date().toISOString().slice(0, 10) },
     scan: {
       tbRisk: 15,
       pneumoniaRisk: 78,

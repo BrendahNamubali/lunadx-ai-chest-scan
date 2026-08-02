@@ -458,7 +458,7 @@ export default function UploadPage() {
           disabled={!patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
           className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm"
         >
-          {{analyzing ? (
+          {analyzing ? (
              <span className="flex items-center gap-2">
                <Loader2 className="w-4 h-4 animate-spin" />
                {analysisType === "tb" ? "Analyzing for TB..." : "Analyzing with CheXNet..."}

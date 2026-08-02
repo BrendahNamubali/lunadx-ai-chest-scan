@@ -10,13 +10,15 @@ import {
   UsersIcon,
   ShieldIcon,
   AlertTriangleIcon,
-  CheckCircleIcon,
-  ChevronRightIcon,
-  PlayIcon,
-  PauseIcon,
-  RotateCcwIcon,
-  EyeIcon
 } from "@/components/icons/CustomIcons";
+import {
+  CheckCircle as CheckCircleIcon,
+  ChevronRight as ChevronRightIcon,
+  Play as PlayIcon,
+  Pause as PauseIcon,
+  RotateCcw as RotateCcwIcon,
+  Eye as EyeIcon,
+} from "lucide-react";
 
 /* ─── workflow steps ─── */
 const STEPS = [

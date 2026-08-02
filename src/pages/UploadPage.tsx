@@ -456,7 +456,7 @@ export default function UploadPage() {
             console.log('Button clicked!');
             handleAnalyze();
           }} 
-          disabled={!patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
+          disabled={analysisType === "chest" || !patientId || !imageFile || analyzing || hasPoorQuality || !xrayConfirmed}
           className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90 h-12 text-sm"
         >
           {analyzing ? (
@@ -467,7 +467,7 @@ export default function UploadPage() {
            ) : (
              <span className="flex items-center gap-2">
                <FileImage className="w-4 h-4" />
-               {analysisType === "tb" ? "Analyze for TB" : "Analyze X-Ray"}
+               {analysisType === "chest" ? "Chest Findings Analysis — coming soon" : analysisType === "tb" ? "Analyze for TB" : "Analyze X-Ray"}
              </span>
           )}
         </Button>

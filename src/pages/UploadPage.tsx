@@ -4,6 +4,7 @@ import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
 import ChestFindingsPanel from "@/components/ChestFindingsPanel";
+import { analyzeChestFindings, type ChestFindingsResult } from "@/lib/chestFindings";
 import { getPatients, getCurrentUser, analyzeXray, analyzeTbXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

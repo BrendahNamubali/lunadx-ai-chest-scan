@@ -105,6 +105,7 @@ export default function UploadPage() {
     if (!file.type.startsWith("image/")) return;
     setImageFile(file);
     setQualityChecks(null);
+    setChestResult(null);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -138,7 +139,7 @@ export default function UploadPage() {
     );
   }
 
-  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); };
+  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); setChestResult(null); };
   const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
 
   // ── Build ScanResult from backend or simulation response ──
@@ -318,7 +319,17 @@ export default function UploadPage() {
           </Select>
         </div>
 
-        {analysisType === "chest" && <ChestFindingsPanel result={chestResult} />}
+        {analysisType === "chest" && (
+          chestResult ? (
+            <ChestFindingsPanel result={chestResult} />
+          ) : (
+            <div className="rounded-lg border border-border bg-muted/40 p-4 text-center">
+              <p className="text-xs text-muted-foreground">
+                Upload a chest X-ray and run analysis to view findings.
+              </p>
+            </div>
+          )
+        )}
 
         {/* View position + clinical notes */}
         <div className="grid grid-cols-2 gap-4">

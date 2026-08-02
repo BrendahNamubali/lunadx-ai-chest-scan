@@ -105,6 +105,7 @@ export default function UploadPage() {
     if (!file.type.startsWith("image/")) return;
     setImageFile(file);
     setQualityChecks(null);
+    setChestResult(null);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -138,7 +139,7 @@ export default function UploadPage() {
     );
   }
 
-  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); };
+  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); setChestResult(null); };
   const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
 
   // ── Build ScanResult from backend or simulation response ──

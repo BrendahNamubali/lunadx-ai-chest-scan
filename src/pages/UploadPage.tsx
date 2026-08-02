@@ -96,8 +96,7 @@ export default function UploadPage() {
   const [xrayConfirmed, setXrayConfirmed] = useState(false);
   const [qualityChecks, setQualityChecks]   = useState<QualityCheck[] | null>(null);
   const [assessingQuality, setAssessingQuality] = useState(false);
-  const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb">("pneumonia");
-  const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb">("pneumonia");
+  const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb" | "chest">("pneumonia");
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -294,30 +293,20 @@ export default function UploadPage() {
 
         <div>
           <Label>Analysis Type</Label>
-          <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb")}>
+          <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb" | "chest")}>
             <SelectTrigger className="mt-1.5">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pneumonia">Pneumonia / General Chest</SelectItem>
               <SelectItem value="tb">TB Screening</SelectItem>
+              <SelectItem value="chest">Chest Findings Analysis</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        <div>
-  <Label>Analysis Type</Label>
-  <Select value={analysisType} onValueChange={(value) => setAnalysisType(value as "pneumonia" | "tb")}>
-    <SelectTrigger className="mt-1.5">
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="pneumonia">Pneumonia / General Chest</SelectItem>
-      <SelectItem value="tb">TB Screening</SelectItem>
-    </SelectContent>
-  </Select>
-</div>
-        
+        {analysisType === "chest" && <ChestFindingsPanel />}
+
         {/* View position + clinical notes */}
         <div className="grid grid-cols-2 gap-4">
           <div>

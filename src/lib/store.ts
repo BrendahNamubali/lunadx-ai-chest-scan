@@ -410,7 +410,8 @@ export async function analyzeXray(
   imageDataUrl: string,
   patientId?: string,
   clinicalNotes?: string,
-  viewPosition?: string
+  viewPosition?: string,
+  analysisType?: string
 ): Promise<AIAnalysisResponse> {
 
 try {
@@ -423,6 +424,7 @@ try {
   if (patientId) fd.append("patient_id", patientId);
   if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
   fd.append("view_position", viewPosition || "PA");
+  fd.append("analysis_type", analysisType || "pneumonia");
 
   const res = await fetch(`${BACKEND}/chexpert`, {
     method: "POST",

@@ -86,6 +86,7 @@ export default function UploadPage() {
 
   const [patientId, setPatientId]           = useState(searchParams.get("patientId") || "");
   const [viewPosition, setViewPosition]     = useState("PA");
+  const [analysisType, setAnalysisType] = useState("pneumonia");
   const [clinicalNotes, setClinicalNotes]   = useState("");
   const [imageFile, setImageFile]           = useState<File | null>(null);
   const [preview, setPreview]               = useState<string | null>(null);
@@ -252,7 +253,7 @@ export default function UploadPage() {
     console.log('👤 Found patient:', patient?.name);
     try {
       console.log('🚀 Calling analyzeXray...');
-      const aiResponse = await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition);
+      const aiResponse = await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition, analysisType);
       console.log('✅ Analysis response:', aiResponse);
       const scan = buildScan(aiResponse, patient, preview!);
       saveScan(scan);
@@ -286,7 +287,7 @@ export default function UploadPage() {
           )}
         </div>
 
-        {/* View position + clinical notes */}
+        {/* View position + Analysis Type + clinical notes */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>View Position</Label>
@@ -299,6 +300,28 @@ export default function UploadPage() {
               </SelectContent>
             </Select>
           </div>
+          <div>
+             <Label>Analysis Type</Label>
+             <Select value={analysisType} onValueChange={setAnalysisType}>
+               <SelectTrigger className="mt-1.5">
+                 <SelectValue />
+               </SelectTrigger>
+
+               <SelectContent>
+                 <SelectItem value="pneumonia">
+                   Pneumonia Screening
+                 </SelectItem>
+
+                 <SelectItem value="tb">
+                   TB Screening
+                 </SelectItem>
+
+                 <SelectItem value="general">
+                   General Chest Analysis
+                 </SelectItem>
+               </SelectContent>
+             </Select>
+           </div>
           <div>
             <Label>Clinical Notes <span className="text-muted-foreground text-xs">(optional)</span></Label>
             <Textarea value={clinicalNotes} onChange={(e) => setClinicalNotes(e.target.value)} placeholder="e.g. 45M, cough, fever 3 days…" className="mt-1.5 min-h-[38px] text-sm resize-none" />

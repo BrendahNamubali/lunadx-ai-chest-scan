@@ -100,6 +100,7 @@ export default function UploadPage() {
   const [assessingQuality, setAssessingQuality] = useState(false);
   const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb" | "chest">("pneumonia");
   const [chestResult, setChestResult] = useState<ChestFindingsResult | null>(null);
+  const [chestError, setChestError] = useState<string | null>(null);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;

@@ -100,12 +100,14 @@ export default function UploadPage() {
   const [assessingQuality, setAssessingQuality] = useState(false);
   const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb" | "chest">("pneumonia");
   const [chestResult, setChestResult] = useState<ChestFindingsResult | null>(null);
+  const [chestError, setChestError] = useState<string | null>(null);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
     setImageFile(file);
     setQualityChecks(null);
     setChestResult(null);
+    setChestError(null);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -139,7 +141,7 @@ export default function UploadPage() {
     );
   }
 
-  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); setChestResult(null); };
+  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); setChestResult(null); setChestError(null); };
   const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
 
   // ── Build ScanResult from backend or simulation response ──
@@ -259,12 +261,23 @@ export default function UploadPage() {
     console.log('👤 Found patient:', patient?.name);
     try {
       if (analysisType === "chest") {
-        const result = await analyzeChestFindings(preview!, {
-          patientId,
-          clinicalNotes: clinicalNotes || patient.symptoms,
-          viewPosition,
-        });
-        setChestResult(result);
+        setChestError(null);
+        try {
+          const result = await analyzeChestFindings(preview!, {
+            patientId,
+            clinicalNotes: clinicalNotes || patient.symptoms,
+            viewPosition,
+          });
+          setChestResult(result);
+        } catch (err) {
+          console.error('❌ Chest findings analysis failed:', err);
+          setChestResult(null);
+          setChestError(
+            err instanceof Error && err.message
+              ? err.message
+              : "We couldn't complete the chest findings analysis. Please check your connection and try again."
+          );
+        }
         setAnalyzing(false);
         return;
       }
@@ -329,6 +342,22 @@ export default function UploadPage() {
             </div>
           ) : chestResult ? (
             <ChestFindingsPanel result={chestResult} />
+          ) : chestError ? (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-foreground">Chest findings analysis couldn't be completed</p>
+                <p className="text-xs text-muted-foreground">{chestError}</p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button size="sm" onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing}>
+                    Retry Analysis
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setChestError(null)}>
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="rounded-lg border border-border bg-muted/40 p-4 text-center">
               <p className="text-xs text-muted-foreground">

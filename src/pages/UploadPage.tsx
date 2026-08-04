@@ -130,6 +130,20 @@ export default function UploadPage() {
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   }, [handleFile]);
 
+  // Staged progress feedback for Chest Findings Analysis
+  useEffect(() => {
+    if (!(analyzing && analysisType === "chest")) return;
+    setChestProgress(8);
+    setChestStageIndex(0);
+    const tick = setInterval(() => {
+      setChestProgress((p) => (p >= 92 ? 92 : p + 3));
+    }, 220);
+    const stage = setInterval(() => {
+      setChestStageIndex((i) => Math.min(i + 1, CHEST_STAGES.length - 1));
+    }, 1400);
+    return () => { clearInterval(tick); clearInterval(stage); };
+  }, [analyzing, analysisType]);
+
   if (!canUploadScans(user?.role)) {
     return (
       <div className="animate-fade-in max-w-2xl mx-auto text-center py-20">

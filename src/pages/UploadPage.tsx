@@ -11,6 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+
+const CHEST_STAGES = [
+  "Preparing image for analysis…",
+  "Checking image quality…",
+  "Running AI-assisted chest findings model…",
+  "Compiling clinical decision support summary…",
+];
 
 type QualityStatus = "Good" | "Acceptable" | "Poor";
 interface QualityCheck {

@@ -11,6 +11,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+
+const CHEST_STAGES = [
+  "Preparing image for analysis…",
+  "Checking image quality…",
+  "Running AI-assisted chest findings model…",
+  "Compiling clinical decision support summary…",
+];
 
 type QualityStatus = "Good" | "Acceptable" | "Poor";
 interface QualityCheck {
@@ -101,6 +109,8 @@ export default function UploadPage() {
   const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb" | "chest">("pneumonia");
   const [chestResult, setChestResult] = useState<ChestFindingsResult | null>(null);
   const [chestError, setChestError] = useState<string | null>(null);
+  const [chestProgress, setChestProgress] = useState(0);
+  const [chestStageIndex, setChestStageIndex] = useState(0);
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -127,6 +137,20 @@ export default function UploadPage() {
     e.preventDefault(); setDragOver(false);
     if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
   }, [handleFile]);
+
+  // Staged progress feedback for Chest Findings Analysis
+  useEffect(() => {
+    if (!(analyzing && analysisType === "chest")) return;
+    setChestProgress(8);
+    setChestStageIndex(0);
+    const tick = setInterval(() => {
+      setChestProgress((p) => (p >= 92 ? 92 : p + 3));
+    }, 220);
+    const stage = setInterval(() => {
+      setChestStageIndex((i) => Math.min(i + 1, CHEST_STAGES.length - 1));
+    }, 1400);
+    return () => { clearInterval(tick); clearInterval(stage); };
+  }, [analyzing, analysisType]);
 
   if (!canUploadScans(user?.role)) {
     return (
@@ -334,11 +358,27 @@ export default function UploadPage() {
 
         {analysisType === "chest" && (
           analyzing ? (
-            <div className="rounded-lg border border-border bg-muted/40 p-4 flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              <p className="text-xs text-muted-foreground">
-                Running chest findings analysis…
-              </p>
+            <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <p className="text-sm font-medium text-foreground">Running chest findings analysis…</p>
+                <span className="ml-auto text-xs tabular-nums text-muted-foreground">{chestProgress}%</span>
+              </div>
+              <Progress value={chestProgress} className="h-1.5" />
+              <ul className="space-y-1">
+                {CHEST_STAGES.map((stage, i) => (
+                  <li key={stage} className="flex items-center gap-2 text-xs">
+                    {i < chestStageIndex ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                    ) : i === chestStageIndex ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />
+                    )}
+                    <span className={i <= chestStageIndex ? "text-foreground" : "text-muted-foreground"}>{stage}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : chestResult ? (
             <ChestFindingsPanel result={chestResult} />

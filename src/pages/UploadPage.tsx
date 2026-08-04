@@ -358,11 +358,27 @@ export default function UploadPage() {
 
         {analysisType === "chest" && (
           analyzing ? (
-            <div className="rounded-lg border border-border bg-muted/40 p-4 flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-primary" />
-              <p className="text-xs text-muted-foreground">
-                Running chest findings analysis…
-              </p>
+            <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <p className="text-sm font-medium text-foreground">Running chest findings analysis…</p>
+                <span className="ml-auto text-xs tabular-nums text-muted-foreground">{chestProgress}%</span>
+              </div>
+              <Progress value={chestProgress} className="h-1.5" />
+              <ul className="space-y-1">
+                {CHEST_STAGES.map((stage, i) => (
+                  <li key={stage} className="flex items-center gap-2 text-xs">
+                    {i < chestStageIndex ? (
+                      <CheckCircle className="w-3.5 h-3.5 text-success shrink-0" />
+                    ) : i === chestStageIndex ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                    ) : (
+                      <span className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />
+                    )}
+                    <span className={i <= chestStageIndex ? "text-foreground" : "text-muted-foreground"}>{stage}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : chestResult ? (
             <ChestFindingsPanel result={chestResult} />

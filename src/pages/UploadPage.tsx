@@ -259,12 +259,23 @@ export default function UploadPage() {
     console.log('👤 Found patient:', patient?.name);
     try {
       if (analysisType === "chest") {
-        const result = await analyzeChestFindings(preview!, {
-          patientId,
-          clinicalNotes: clinicalNotes || patient.symptoms,
-          viewPosition,
-        });
-        setChestResult(result);
+        setChestError(null);
+        try {
+          const result = await analyzeChestFindings(preview!, {
+            patientId,
+            clinicalNotes: clinicalNotes || patient.symptoms,
+            viewPosition,
+          });
+          setChestResult(result);
+        } catch (err) {
+          console.error('❌ Chest findings analysis failed:', err);
+          setChestResult(null);
+          setChestError(
+            err instanceof Error && err.message
+              ? err.message
+              : "We couldn't complete the chest findings analysis. Please check your connection and try again."
+          );
+        }
         setAnalyzing(false);
         return;
       }

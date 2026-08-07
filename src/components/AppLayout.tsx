@@ -1,5 +1,6 @@
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { getCurrentUser } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import AppSidebar from "./AppSidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PageTransition from "./PageTransition";
@@ -7,9 +8,11 @@ import { AnimatePresence } from "framer-motion";
 
 export default function AppLayout() {
   const user = getCurrentUser();
+  const { session, loading } = useAuth();
   const isMobile = useIsMobile();
   const location = useLocation();
-  if (!user) return <Navigate to="/login" replace />;
+  if (loading) return null;
+  if (!user && !session) return <Navigate to="/login" replace />;
 
   return (
     <div className="min-h-screen bg-background">

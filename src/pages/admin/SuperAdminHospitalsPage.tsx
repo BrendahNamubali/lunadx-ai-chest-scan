@@ -44,14 +44,16 @@ export default function SuperAdminHospitalsPage() {
   useEffect(() => { load(); }, [load]);
 
   const setStatus = async (hospital: Hospital, status: Hospital["status"]) => {
-    const patch: Record<string, unknown> = { status };
-    if (status === "approved") {
-      patch.subscription_status = "trial";
-    }
-    if (status === "rejected") {
-      patch.rejection_reason = "Application did not meet LunaDX onboarding requirements.";
-    }
-    const { error } = await supabase.from("hospitals").update(patch).eq("id", hospital.id);
+    const { error } = await supabase
+      .from("hospitals")
+      .update({
+        status,
+        ...(status === "approved" ? { subscription_status: "trial" as const } : {}),
+        ...(status === "rejected"
+          ? { rejection_reason: "Application did not meet LunaDX onboarding requirements." }
+          : {}),
+      })
+      .eq("id", hospital.id);
     if (error) { toast.error(error.message); return; }
 
     if (status === "approved") {

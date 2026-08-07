@@ -20,6 +20,17 @@ import TriageQueuePage from "./pages/TriageQueuePage";
 import BillingPage from "./pages/BillingPage";
 import OrganizationPage from "./pages/OrganizationPage";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./lib/auth";
+import SaasLayout from "./components/saas/SaasLayout";
+import HospitalRegisterPage from "./pages/HospitalRegisterPage";
+import PendingApprovalPage from "./pages/PendingApprovalPage";
+import SuperAdminHospitalsPage from "./pages/admin/SuperAdminHospitalsPage";
+import SuperAdminPlansPage from "./pages/admin/SuperAdminPlansPage";
+import SuperAdminUsersPage from "./pages/admin/SuperAdminUsersPage";
+import HospitalDashboardPage from "./pages/hospital/HospitalDashboardPage";
+import HospitalUsersPage from "./pages/hospital/HospitalUsersPage";
+import HospitalSubscriptionPage from "./pages/hospital/HospitalSubscriptionPage";
+import ClinicianDashboardPage from "./pages/clinician/ClinicianDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -29,10 +40,28 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <AuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<HospitalRegisterPage />} />
+          <Route path="/pending-approval" element={<PendingApprovalPage />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="/report/:scanId" element={<SharedReportPage />} />
+
+          <Route element={<SaasLayout allow={["super_admin"]} />}>
+            <Route path="/admin" element={<SuperAdminHospitalsPage />} />
+            <Route path="/admin/plans" element={<SuperAdminPlansPage />} />
+            <Route path="/admin/users" element={<SuperAdminUsersPage />} />
+          </Route>
+          <Route element={<SaasLayout allow={["hospital_admin"]} />}>
+            <Route path="/hospital/dashboard" element={<HospitalDashboardPage />} />
+            <Route path="/hospital/users" element={<HospitalUsersPage />} />
+            <Route path="/hospital/subscription" element={<HospitalSubscriptionPage />} />
+          </Route>
+          <Route element={<SaasLayout allow={["clinician"]} />}>
+            <Route path="/clinician/dashboard" element={<ClinicianDashboardPage />} />
+          </Route>
+
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/patients" element={<PatientsPage />} />
@@ -49,6 +78,7 @@ const App = () => (
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

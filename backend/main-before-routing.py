@@ -1,8 +1,5 @@
-from xml.parsers.expat import model
-
 from fastapi import FastAPI, HTTPException, Depends, status, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
-from huggingface_hub import hf_hub_download
 from pydantic import BaseModel
 import requests
 import os
@@ -109,45 +106,17 @@ async def chexpert_endpoint(
     patient_id: Optional[str] = Form(None),
     clinical_notes: Optional[str] = Form(None),
     view_position: str = Form("PA"),
-    analysis_type: str = Form("pneumonia"),
     db: Session = Depends(get_db),
 ):
+    return await analyze_xray(file, patient_id, clinical_notes, view_position, db)
 
-    if analysis_type == "tb":
-        raise HTTPException(
-            status_code=501,
-            detail="TB analysis is coming soon"
-        )
-
-    if analysis_type == "general":
-        return await run_analysis(
-            file,
-            patient_id,
-            clinical_notes,
-            view_position,
-            call_general_model,
-            "CheXpert-DenseNet121-v1",
-            db
-        )
-
-    return await run_analysis(
-        file,
-        patient_id,
-        clinical_notes,
-        view_position,
-        call_huggingface_model,
-        "PneumoniaViT-v1.0",
-        db
-    )
-
-async def run_analysis(
-    file: UploadFile,
-    patient_id,
-    clinical_notes,
-    view_position,
-    predict_fn,
-    model_version,
-    db: Session
+@app.post("/analyze")
+async def analyze_xray(
+    file: UploadFile = File(...),
+    patient_id: Optional[str] = Form(None),
+    clinical_notes: Optional[str] = Form(None),
+    view_position: str = Form("PA"),
+    db: Session = Depends(get_db),
 ):
     start_time = time.time()
     study_id = f"study-{datetime.now().strftime('%Y%m%d%H%M%S')}"
@@ -171,7 +140,8 @@ async def run_analysis(
             )
 
         try:
-            predictions = predict_fn(image)
+            predictions = call_huggingface_model(image)
+            model_version = "PneumoniaViT-v1.0"
         except Exception as e:
             logger.error(f"Inference failed: {e}")
             raise HTTPException(status_code=503, detail="AI model unavailable")
@@ -241,7 +211,7 @@ async def run_analysis(
 
 def get_icd10_code(pathology: str) -> str:
     codes = {
-        'No Finding': 'Z00.00',
+        'Normal': 'Z00.00',
         'Atelectasis': 'J98.11',
         'Consolidation': 'J18.1',
         'Infiltration': 'J18.9',
@@ -249,7 +219,7 @@ def get_icd10_code(pathology: str) -> str:
         'Edema': 'J81',
         'Emphysema': 'J43.9',
         'Fibrosis': 'J84.10',
-        'Pleural Effusion': 'J90',
+        'Effusion': 'J90',
         'Pneumonia': 'J18.9',
         'Pleural_Thickening': 'J94.8',
         'Cardiomegaly': 'I51.7',
@@ -266,9 +236,6 @@ def get_icd10_code(pathology: str) -> str:
 _model = None
 _processor = None
 
-_general_model = None
-_general_processor = None
-
 def get_local_model():
     global _model, _processor
     if _model is None:
@@ -277,96 +244,6 @@ def get_local_model():
         _model = AutoModelForImageClassification.from_pretrained("lxyuan/vit-xray-pneumonia-classification")
         _model.eval()
     return _model, _processor
-
-def get_general_model():
-    global _general_model, _general_processor
-
-    if _general_model is None:
-        import torch
-        import torchvision.models as models
-        from huggingface_hub import hf_hub_download
-        from safetensors.torch import load_file
-        from torchvision import transforms
-
-        logger.info("Loading CheXpert DenseNet121 model")
-
-        # Create DenseNet121 architecture
-        model = models.densenet121(weights=None)
-
-        # Replace classifier for 14 CheXpert labels
-        model.classifier = torch.nn.Linear(
-            model.classifier.in_features,
-            14
-        )
-
-        # Download weights from Hugging Face
-        weights_path = hf_hub_download(
-            repo_id="itsomk/chexpert-densenet121",
-            filename="pytorch_model.safetensors"
-        )
-
-        state_dict = load_file(weights_path)
-
-        # Remove "densenet." prefix from checkpoint keys
-        state_dict = {
-            (k[10:] if k.startswith("densenet.") else k): v
-            for k, v in state_dict.items()
-        }
-
-        model.load_state_dict(state_dict)
-
-        model.eval()
-
-        _general_model = model
-
-        _general_processor = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.485, 0.456, 0.406],
-                std=[0.229, 0.224, 0.225]
-            )
-        ])
-
-        logger.info("✅ CheXpert DenseNet121 loaded")
-
-    return _general_model, _general_processor
-
-def call_general_model(image: Image.Image):
-    import torch
-
-    model, processor = get_general_model()
-
-    image_tensor = processor(image).unsqueeze(0)
-
-    with torch.no_grad():
-        logits = model(image_tensor)
-
-    probabilities = torch.sigmoid(logits)[0]
-
-    labels = [
-        "No Finding",
-        "Enlarged Cardiomediastinum",
-        "Cardiomegaly",
-        "Lung Opacity",
-        "Lung Lesion",
-        "Edema",
-        "Consolidation",
-        "Pneumonia",
-        "Atelectasis",
-        "Pneumothorax",
-        "Pleural Effusion",
-        "Pleural Other",
-        "Fracture",
-        "Support Devices"
-    ]
-
-    predictions = {}
-
-    for label, probability in zip(labels, probabilities):
-        predictions[label] = round(probability.item(), 4)
-
-    return predictions
 
 def call_huggingface_model(image: Image.Image):
     import torch
@@ -391,4 +268,4 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
     host = os.getenv("HOST", "127.0.0.1")
-    uvicorn.run(app, host=host, port=port) 
+    uvicorn.run(app, host=host, port=port)

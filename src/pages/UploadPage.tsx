@@ -251,10 +251,12 @@ export default function UploadPage() {
     setAnalyzing(true); setAnalysisError(false);
     const patient = patients.find((p) => p.id === patientId)!;
     console.log('👤 Found patient:', patient?.name);
+    console.log('🩻 Selected analysis type:', analysisType);
+    console.log('🖼 Preview exists:', !!preview);
     try {
       console.log('🚀 Calling analyzeXray...');
       const aiResponse = await analyzeXray(preview!, patientId, clinicalNotes || patient.symptoms, viewPosition, analysisType);
-      console.log('✅ Analysis response:', aiResponse);
+      console.log("✅ Analysis response:", JSON.stringify(aiResponse, null, 2));
       const scan = buildScan(aiResponse, patient, preview!);
       saveScan(scan);
       setAnalyzing(false);

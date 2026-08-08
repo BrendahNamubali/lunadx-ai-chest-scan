@@ -4,6 +4,7 @@ import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert,
 import { motion } from "framer-motion";
 import { getScans, getCurrentUser, getOrganization, updateScanNotes, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
+import ChestFindingsPanel from "@/components/ChestFindingsPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";

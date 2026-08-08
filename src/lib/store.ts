@@ -67,6 +67,16 @@ export interface ScanResult {
   doctorName: string;
   doctorNotes?: string;
   orgId?: string;
+  /** Which analysis module produced this scan. Defaults to pneumonia. */
+  analysisType?: "pneumonia" | "tb" | "chest";
+  /** Chest Findings Analysis module output (only for analysisType === "chest") */
+  chestFindings?: {
+    name: string;
+    status: "detected" | "not_detected" | "review" | "pending";
+    confidence: number | null;
+  }[];
+  chestSummary?: string;
+  chestPending?: boolean;
 }
 
 export interface AIAnalysisResponse {

@@ -466,7 +466,22 @@ export default function ResultsPage() {
       </div>
 
       {/* Risk Banner */}
-      <RiskBanner scan={scan} />
+      {scan.analysisType === "chest" ? null : <RiskBanner scan={scan} />}
+
+      {/* Chest Findings Analysis */}
+      {scan.analysisType === "chest" && scan.chestFindings && (
+        <div className="mt-1">
+          <ChestFindingsPanel
+            result={{
+              studyId: scan.id,
+              analysedAt: scan.scanDate,
+              findings: scan.chestFindings,
+              clinicalSummary: scan.chestSummary || scan.aiSummary || "",
+              pending: scan.chestPending ?? false,
+            }}
+          />
+        </div>
+      )}
 
       {/* Main Content: X-ray + Risk Score side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">

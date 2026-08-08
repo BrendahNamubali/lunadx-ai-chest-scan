@@ -4,6 +4,7 @@ import { ArrowLeft, Download, AlertTriangle, CheckCircle, Activity, ShieldAlert,
 import { motion } from "framer-motion";
 import { getScans, getCurrentUser, getOrganization, updateScanNotes, type ScanResult } from "@/lib/store";
 import RiskBadge from "@/components/RiskBadge";
+import ChestFindingsPanel from "@/components/ChestFindingsPanel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -465,7 +466,22 @@ export default function ResultsPage() {
       </div>
 
       {/* Risk Banner */}
-      <RiskBanner scan={scan} />
+      {scan.analysisType === "chest" ? null : <RiskBanner scan={scan} />}
+
+      {/* Chest Findings Analysis */}
+      {scan.analysisType === "chest" && scan.chestFindings && (
+        <div className="mt-1">
+          <ChestFindingsPanel
+            result={{
+              studyId: scan.id,
+              analysedAt: scan.scanDate,
+              findings: scan.chestFindings,
+              clinicalSummary: scan.chestSummary || scan.aiSummary || "",
+              pending: scan.chestPending ?? false,
+            }}
+          />
+        </div>
+      )}
 
       {/* Main Content: X-ray + Risk Score side by side */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
@@ -485,15 +501,17 @@ export default function ResultsPage() {
         </Card>
 
         {/* Risk Score */}
-        <Card>
-          <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center h-full">
-            <PrimaryRiskRing scan={scan} />
-          </CardContent>
-        </Card>
+        {scan.analysisType !== "chest" && (
+          <Card>
+            <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center h-full">
+              <PrimaryRiskRing scan={scan} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* AI Summary */}
-      {scan.aiSummary && (
+      {scan.aiSummary && scan.analysisType !== "chest" && (
         <Card className="mt-5">
           <CardContent className="pt-5 pb-5">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
@@ -508,6 +526,7 @@ export default function ResultsPage() {
       )}
 
       {/* Key Findings (top 3) */}
+      {scan.analysisType !== "chest" && (
       <Card className="mt-5">
         <CardContent className="pt-5 pb-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
@@ -545,6 +564,7 @@ export default function ResultsPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Doctor Notes */}
       <Card className="mt-5">

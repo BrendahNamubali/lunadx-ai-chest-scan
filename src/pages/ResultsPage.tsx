@@ -501,15 +501,17 @@ export default function ResultsPage() {
         </Card>
 
         {/* Risk Score */}
-        <Card>
-          <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center h-full">
-            <PrimaryRiskRing scan={scan} />
-          </CardContent>
-        </Card>
+        {scan.analysisType !== "chest" && (
+          <Card>
+            <CardContent className="pt-6 pb-6 flex flex-col items-center justify-center h-full">
+              <PrimaryRiskRing scan={scan} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* AI Summary */}
-      {scan.aiSummary && (
+      {scan.aiSummary && scan.analysisType !== "chest" && (
         <Card className="mt-5">
           <CardContent className="pt-5 pb-5">
             <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
@@ -524,6 +526,7 @@ export default function ResultsPage() {
       )}
 
       {/* Key Findings (top 3) */}
+      {scan.analysisType !== "chest" && (
       <Card className="mt-5">
         <CardContent className="pt-5 pb-5">
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-3 flex items-center gap-2">
@@ -561,6 +564,7 @@ export default function ResultsPage() {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Doctor Notes */}
       <Card className="mt-5">

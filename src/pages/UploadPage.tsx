@@ -280,24 +280,36 @@ export default function UploadPage() {
     console.log('👤 Found patient:', patient?.name);
     try {
       if (analysisType === "chest") {
-        setChestError(null);
-        try {
-          const result = await analyzeChestFindings(preview!, {
-            patientId,
-            clinicalNotes: clinicalNotes || patient.symptoms,
-            viewPosition,
-          });
-          setChestResult(result);
-        } catch (err) {
-          console.error('❌ Chest findings analysis failed:', err);
-          setChestResult(null);
-          setChestError(
-            err instanceof Error && err.message
-              ? err.message
-              : "We couldn't complete the chest findings analysis. Please check your connection and try again."
-          );
-        }
+        const result = await analyzeChestFindings(preview!, {
+          patientId,
+          clinicalNotes: clinicalNotes || patient.symptoms,
+          viewPosition,
+        });
+        const chestScan: ScanResult = {
+          id: crypto.randomUUID(),
+          patientId: patient.id,
+          patientName: patient.name,
+          imageUrl: preview!,
+          tbRisk: 0,
+          pneumoniaRisk: 0,
+          lungOpacityRisk: 0,
+          pleuralEffusionRisk: 0,
+          lungNodulesRisk: 0,
+          abnormalityScore: 0,
+          riskLevel: "Low",
+          findings: ["AI-assisted chest findings — see Chest Findings Analysis below."],
+          suggestions: ["Review alongside clinical judgment.", "All AI-assisted findings must be confirmed by a qualified clinician."],
+          aiSummary: result.clinicalSummary,
+          scanDate: new Date().toISOString(),
+          doctorName: user?.name || "Unknown",
+          analysisType: "chest",
+          chestFindings: result.findings,
+          chestSummary: result.clinicalSummary,
+          chestPending: result.pending,
+        };
+        saveScan(chestScan);
         setAnalyzing(false);
+        navigate(`/results/${chestScan.id}`);
         return;
       }
       console.log(analysisType === "tb" ? "🚀 Calling analyzeTbXray..." : "🚀 Calling analyzeXray...");
@@ -314,7 +326,13 @@ export default function UploadPage() {
       console.error('❌ Analysis failed:', err);
       setAnalyzing(false);
       setAnalysisError(true);
-      setErrorMessage(err instanceof Error ? err.message : "Analysis failed.");
+      setErrorMessage(
+        err instanceof Error && err.message
+          ? err.message
+          : analysisType === "chest"
+          ? "We couldn't complete the chest findings analysis. Please check your connection and try again."
+          : "Analysis failed."
+      );
     }
   };
 
@@ -351,8 +369,7 @@ export default function UploadPage() {
           </Select>
         </div>
 
-        {analysisType === "chest" && (
-          analyzing ? (
+        {analysisType === "chest" && analyzing && (
             <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-3">
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
@@ -375,31 +392,6 @@ export default function UploadPage() {
                 ))}
               </ul>
             </div>
-          ) : chestResult ? (
-            <ChestFindingsPanel result={chestResult} />
-          ) : chestError ? (
-            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-              <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-foreground">Chest findings analysis couldn't be completed</p>
-                <p className="text-xs text-muted-foreground">{chestError}</p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Button size="sm" onClick={handleAnalyze} disabled={!patientId || !imageFile || analyzing}>
-                    Retry Analysis
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => setChestError(null)}>
-                    Dismiss
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-lg border border-border bg-muted/40 p-4 text-center">
-              <p className="text-xs text-muted-foreground">
-                Upload a chest X-ray and run analysis to view findings.
-              </p>
-            </div>
-          )
         )}
 
         {/* View position + clinical notes */}

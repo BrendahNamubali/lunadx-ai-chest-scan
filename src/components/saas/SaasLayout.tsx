@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
-import { Shield, LogOut, Building2, LayoutDashboard, Users, CreditCard, Upload, BadgeCheck, Loader2 } from "lucide-react";
+import { Shield, LogOut, Building2, LayoutDashboard, Users, CreditCard, Upload, BadgeCheck, Loader2, ShieldCheck } from "lucide-react";
 import { useAuth, dashboardPathFor, type AppRole } from "@/lib/auth";
 
 const NAV: Record<AppRole, { to: string; label: string; icon: typeof Shield }[]> = {
@@ -7,6 +7,7 @@ const NAV: Record<AppRole, { to: string; label: string; icon: typeof Shield }[]>
     { to: "/admin", label: "Hospitals", icon: Building2 },
     { to: "/admin/plans", label: "Plans & Pricing", icon: CreditCard },
     { to: "/admin/users", label: "Platform Users", icon: Users },
+    { to: "/admin/super-admins", label: "Super Admins", icon: ShieldCheck },
   ],
   hospital_admin: [
     { to: "/hospital/dashboard", label: "Dashboard", icon: LayoutDashboard },

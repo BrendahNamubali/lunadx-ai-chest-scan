@@ -27,6 +27,7 @@ import PendingApprovalPage from "./pages/PendingApprovalPage";
 import SuperAdminHospitalsPage from "./pages/admin/SuperAdminHospitalsPage";
 import SuperAdminPlansPage from "./pages/admin/SuperAdminPlansPage";
 import SuperAdminUsersPage from "./pages/admin/SuperAdminUsersPage";
+import SuperAdminAccountsPage from "./pages/admin/SuperAdminAccountsPage";
 import HospitalDashboardPage from "./pages/hospital/HospitalDashboardPage";
 import HospitalUsersPage from "./pages/hospital/HospitalUsersPage";
 import HospitalSubscriptionPage from "./pages/hospital/HospitalSubscriptionPage";
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/admin" element={<SuperAdminHospitalsPage />} />
             <Route path="/admin/plans" element={<SuperAdminPlansPage />} />
             <Route path="/admin/users" element={<SuperAdminUsersPage />} />
+            <Route path="/admin/super-admins" element={<SuperAdminAccountsPage />} />
           </Route>
           <Route element={<SaasLayout allow={["hospital_admin"]} />}>
             <Route path="/hospital/dashboard" element={<HospitalDashboardPage />} />

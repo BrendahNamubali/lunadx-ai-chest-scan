@@ -3,8 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User, Sparkles, Loader2, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
-import ChestFindingsPanel from "@/components/ChestFindingsPanel";
-import { analyzeChestFindings, type ChestFindingsResult } from "@/lib/chestFindings";
+import { analyzeChestFindings } from "@/lib/chestFindings";
 import { getPatients, getCurrentUser, analyzeXray, analyzeTbXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -107,8 +106,6 @@ export default function UploadPage() {
   const [qualityChecks, setQualityChecks]   = useState<QualityCheck[] | null>(null);
   const [assessingQuality, setAssessingQuality] = useState(false);
   const [analysisType, setAnalysisType] = useState<"pneumonia" | "tb" | "chest">("pneumonia");
-  const [chestResult, setChestResult] = useState<ChestFindingsResult | null>(null);
-  const [chestError, setChestError] = useState<string | null>(null);
   const [chestProgress, setChestProgress] = useState(0);
   const [chestStageIndex, setChestStageIndex] = useState(0);
 
@@ -116,8 +113,6 @@ export default function UploadPage() {
     if (!file.type.startsWith("image/")) return;
     setImageFile(file);
     setQualityChecks(null);
-    setChestResult(null);
-    setChestError(null);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(file);
@@ -165,7 +160,7 @@ export default function UploadPage() {
     );
   }
 
-  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); setChestResult(null); setChestError(null); };
+  const clearImage = () => { setImageFile(null); setPreview(null); setQualityChecks(null); setXrayConfirmed(false); };
   const hasPoorQuality = qualityChecks?.some((c) => c.status === "Poor") ?? false;
 
   // ── Build ScanResult from backend or simulation response ──

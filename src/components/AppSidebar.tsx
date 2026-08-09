@@ -1,25 +1,27 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2, Lock } from "lucide-react";
-import { getCurrentUser, logout, canUploadScans, canManageOrganization } from "@/lib/store";
+import { getCurrentUser, logout } from "@/lib/store";
+import { usePermissions } from "@/lib/permissions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-const getNavItems = (role?: string) => [
+const getNavItems = (perms: { canUploadScans: boolean; canManageOrganization: boolean }) => [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", allowed: true },
   { to: "/patients", icon: Users, label: "Patients", allowed: true },
   { to: "/triage", icon: ClipboardList, label: "AI Triage Queue", allowed: true },
-  { to: "/upload", icon: Upload, label: "Screenings", allowed: canUploadScans(role as any) },
+  { to: "/upload", icon: Upload, label: "Screenings", allowed: perms.canUploadScans },
   { to: "/analytics", icon: BarChart3, label: "Analytics", allowed: true },
   { to: "/demo", icon: FlaskConical, label: "Demo Cases", allowed: true },
   { to: "/history", icon: FileText, label: "Audit Logs", allowed: true },
   { to: "/organization", icon: Building2, label: "Organization", allowed: true },
-  { to: "/billing", icon: CreditCard, label: "Billing", allowed: canManageOrganization(role as any) },
+  { to: "/billing", icon: CreditCard, label: "Billing", allowed: perms.canManageOrganization },
 ];
 
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const user = getCurrentUser();
+  const perms = usePermissions();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -44,7 +46,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {getNavItems(user?.role).map((item) => (
+        {getNavItems(perms).map((item) => (
           item.allowed ? (
             <NavLink
               key={item.to}
@@ -75,7 +77,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
                 </div>
               </TooltipTrigger>
               <TooltipContent side="right">
-                <p className="text-xs">Restricted to {item.to === "/billing" ? "Admins" : "Radiologists & Admins"}</p>
+                <p className="text-xs">Restricted to {item.to === "/billing" ? "Admins" : "clinical staff"}</p>
               </TooltipContent>
             </Tooltip>
           )

@@ -147,13 +147,13 @@ export default function UploadPage() {
     return () => { clearInterval(tick); clearInterval(stage); };
   }, [analyzing, analysisType]);
 
-  if (!canUploadScans(user?.role)) {
+  if (!canUpload) {
     return (
       <div className="animate-fade-in max-w-2xl mx-auto text-center py-20">
         <AlertTriangle className="w-12 h-12 text-warning mx-auto mb-4" />
         <h1 className="text-xl font-bold text-foreground mb-2">Access Restricted</h1>
         <p className="text-sm text-muted-foreground mb-4">
-          Only Radiologists and Admins can upload and analyze X-rays. As a Clinician, you can view existing results in the{" "}
+          Your account does not have access to AI-assisted screening. You can still review existing results in the{" "}
           <button onClick={() => navigate("/history")} className="text-primary hover:underline">scan history</button>.
         </p>
       </div>

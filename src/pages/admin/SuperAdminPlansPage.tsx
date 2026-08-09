@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import type { Plan } from "@/pages/hospital/HospitalSubscriptionPage";
+import { formatPrice, type Plan } from "@/pages/hospital/HospitalSubscriptionPage";
 
 export default function SuperAdminPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);

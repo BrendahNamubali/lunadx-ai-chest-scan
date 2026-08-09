@@ -403,7 +403,7 @@ export async function analyzeXray(
 // ── Utility Functions ──────────────────────────────────
 
 export function canUploadScans(role?: UserRole): boolean {
-  return role === "Admin" || role === "Radiologist";
+  return role === "Admin" || role === "Radiologist" || role === "Clinician";
 }
 
 export function simulateAI(): {

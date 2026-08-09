@@ -567,7 +567,7 @@ export function canUploadScans(role?: UserRole): boolean {
 }
 
 export function canManagePatients(role?: UserRole): boolean {
-  return role === "Admin" || role === "Radiologist";
+  return role === "Admin" || role === "Radiologist" || role === "Clinician";
 }
 
 export function canManageOrganization(role?: UserRole): boolean {

@@ -22,7 +22,14 @@ export interface Plan {
 
 export function formatPrice(plan: Plan) {
   if (plan.price_monthly_cents === 0) return "Custom pricing";
-  return `${plan.currency} ${(plan.price_monthly_cents / 100).toLocaleString()}/mo`;
+  const amount = plan.price_monthly_cents / 100;
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: plan.currency || "USD",
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+  return `${formatted}/mo`;
 }
 
 export default function HospitalSubscriptionPage() {

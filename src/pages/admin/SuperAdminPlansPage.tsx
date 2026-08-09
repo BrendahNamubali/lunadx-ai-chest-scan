@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import type { Plan } from "@/pages/hospital/HospitalSubscriptionPage";
+import { formatPrice, type Plan } from "@/pages/hospital/HospitalSubscriptionPage";
 
 export default function SuperAdminPlansPage() {
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -63,9 +63,22 @@ export default function SuperAdminPlansPage() {
                 <Input className="mt-1.5" value={plan.name} onChange={(e) => patch(plan.id, { name: e.target.value })} />
               </div>
               <div>
-                <Label>Monthly price (cents, 0 = custom)</Label>
-                <Input className="mt-1.5" type="number" value={plan.price_monthly_cents}
-                  onChange={(e) => patch(plan.id, { price_monthly_cents: Number(e.target.value) })} />
+                <Label>Monthly price (USD, 0 = custom pricing)</Label>
+                <Input
+                  className="mt-1.5"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={plan.price_monthly_cents / 100}
+                  onChange={(e) =>
+                    patch(plan.id, {
+                      price_monthly_cents: Math.round((Number(e.target.value) || 0) * 100),
+                    })
+                  }
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {plan.price_monthly_cents === 0 ? "Custom pricing" : `Hospitals see ${formatPrice(plan)}`}
+                </p>
               </div>
               <div>
                 <Label>Max clinicians</Label>

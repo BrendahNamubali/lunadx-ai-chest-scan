@@ -4,7 +4,8 @@ import { Upload, FileImage, X, CheckCircle, AlertTriangle, Monitor, Target, User
 import { motion, AnimatePresence } from "framer-motion";
 import AIAnalysisLoader from "@/components/AIAnalysisLoader";
 import { analyzeChestFindings } from "@/lib/chestFindings";
-import { getPatients, getCurrentUser, analyzeXray, analyzeTbXray, simulateAI, saveScan, savePatient, canUploadScans, type ScanResult } from "@/lib/store";
+import { getPatients, getCurrentUser, analyzeXray, analyzeTbXray, simulateAI, saveScan, savePatient, type ScanResult } from "@/lib/store";
+import { usePermissions } from "@/lib/permissions";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -92,6 +93,7 @@ export default function UploadPage() {
   const navigate = useNavigate();
   const patients = getPatients();
   const user = getCurrentUser();
+  const { canUploadScans: canUpload } = usePermissions();
 
   const [patientId, setPatientId]           = useState(searchParams.get("patientId") || "");
   const [viewPosition, setViewPosition]     = useState("PA");

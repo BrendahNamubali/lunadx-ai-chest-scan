@@ -10,10 +10,12 @@ type LunaLogoProps = {
   variant?: "dark" | "light";
   /** When true, wraps the mark in a role-aware home link. */
   asLink?: boolean;
+  /** Home path used when there is no role-based session (defaults to "/"). */
+  fallbackTo?: string;
 };
 
 /** Official LunaDX mark, transparent — no container, border or shadow. */
-export default function LunaLogo({ className, variant = "dark", asLink }: LunaLogoProps) {
+export default function LunaLogo({ className, variant = "dark", asLink, fallbackTo = "/" }: LunaLogoProps) {
   const asset = variant === "light" ? logoLightAsset : logoAsset;
   const img = (
     <img
@@ -24,12 +26,12 @@ export default function LunaLogo({ className, variant = "dark", asLink }: LunaLo
   );
 
   if (!asLink) return img;
-  return <LunaLogoLink>{img}</LunaLogoLink>;
+  return <LunaLogoLink fallbackTo={fallbackTo}>{img}</LunaLogoLink>;
 }
 
-function LunaLogoLink({ children }: { children: React.ReactNode }) {
+function LunaLogoLink({ children, fallbackTo }: { children: React.ReactNode; fallbackTo: string }) {
   const { session, role } = useAuth();
-  const to = session && role ? dashboardPathFor(role) : "/";
+  const to = session && role ? dashboardPathFor(role) : fallbackTo;
   return (
     <Link to={to} aria-label="LunaDX home" className="cursor-pointer shrink-0">
       {children}

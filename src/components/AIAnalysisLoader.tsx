@@ -77,7 +77,7 @@ export default function AIAnalysisLoader() {
             className="relative w-18 h-18 rounded-2xl medical-gradient flex items-center justify-center shadow-lg shadow-primary/25"
             style={{ width: 72, height: 72 }}
           >
-            <LunaLogo className="w-12 h-12 rounded-xl" />
+            <LunaLogo variant="light" className="w-12 h-12" />
           </motion.div>
         </div>
 

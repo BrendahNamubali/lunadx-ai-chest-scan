@@ -35,7 +35,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       {/* Logo */}
       <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
-          <LunaLogo />
+          <LunaLogo variant="light" asLink fallbackTo="/dashboard" />
           <div>
             <h1 className="text-base font-bold text-sidebar-primary-foreground tracking-tight">LunaDX</h1>
             <p className="text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.15em]">AI Screening</p>

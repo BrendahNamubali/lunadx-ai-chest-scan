@@ -48,7 +48,7 @@ export function SaasLayout({ allow }: { allow: AppRole[] }) {
       <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-30">
         <div className="p-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2.5">
-            <LunaLogo />
+            <LunaLogo variant="light" asLink />
             <div>
               <h1 className="text-base font-bold text-sidebar-primary-foreground tracking-tight">LunaDX</h1>
               <p className="text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.15em]">

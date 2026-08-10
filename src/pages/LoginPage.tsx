@@ -38,7 +38,7 @@ export default function LoginPage() {
       {/* Left - Branding */}
       <div className="hidden lg:flex lg:w-1/2 medical-gradient items-center justify-center p-12">
         <div className="max-w-md text-center">
-          <LunaLogo className="w-20 h-20 rounded-2xl mx-auto mb-8" />
+          <LunaLogo variant="light" className="w-20 h-20 mx-auto mb-8" />
           <h1 className="text-4xl font-bold text-primary-foreground mb-4 tracking-tight">LunaDX</h1>
           <p className="text-lg text-primary-foreground/80 mb-2">AI-Assisted Clinical Screening</p>
           <p className="text-sm text-primary-foreground/60 leading-relaxed">
@@ -52,7 +52,7 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <LunaLogo className="w-10 h-10 rounded-xl" />
+            <LunaLogo className="w-10 h-10" asLink />
             <span className="text-xl font-bold text-foreground">LunaDX</span>
           </div>
 

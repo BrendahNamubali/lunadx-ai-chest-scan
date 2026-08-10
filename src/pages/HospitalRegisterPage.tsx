@@ -63,7 +63,7 @@ export default function HospitalRegisterPage() {
     <div className="min-h-screen bg-muted/30 py-12 px-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-2.5 mb-8">
-          <LunaLogo className="w-10 h-10 rounded-xl" />
+          <LunaLogo className="w-10 h-10" asLink />
           <span className="text-xl font-bold text-foreground">LunaDX</span>
         </div>
 

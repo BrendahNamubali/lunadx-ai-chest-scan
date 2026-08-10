@@ -52,7 +52,7 @@ export default function LandingPage() {
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
           <div className="flex items-center gap-2.5">
-            <LunaLogo />
+            <LunaLogo asLink />
             <span className="text-lg font-bold tracking-tight">LunaDX</span>
           </div>
           <div className="flex items-center gap-3">

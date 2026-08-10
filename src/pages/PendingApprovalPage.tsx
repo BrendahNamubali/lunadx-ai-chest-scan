@@ -39,7 +39,7 @@ export default function PendingApprovalPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-muted/30">
       <div className="w-full max-w-md bg-card border border-border rounded-2xl p-8 text-center shadow-sm">
-        <LunaLogo className="w-12 h-12 rounded-xl mx-auto mb-6" />
+        <LunaLogo className="w-12 h-12 mx-auto mb-6" />
         <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
           <Icon className="w-7 h-7 text-muted-foreground" />
         </div>

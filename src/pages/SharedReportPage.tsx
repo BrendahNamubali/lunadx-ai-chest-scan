@@ -7,6 +7,7 @@ import RiskBadge from "@/components/RiskBadge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import jsPDF from "jspdf";
+import LunaLogo from "@/components/LunaLogo";
 
 /* ─── Helpers ────────────────────────────────────────── */
 const getRiskColor = (v: number) => (v > 70 ? "text-destructive" : v > 40 ? "text-warning" : "text-success");
@@ -183,9 +184,7 @@ export default function SharedReportPage() {
       <div className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10 print:hidden">
         <div className="max-w-[900px] mx-auto px-4 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-              <Shield className="w-4 h-4 text-primary-foreground" />
-            </div>
+            <LunaLogo className="w-7 h-7 rounded-md" />
             <span className="font-semibold text-foreground text-sm">LunaDX Report</span>
             <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium uppercase tracking-wider">Read Only</span>
           </div>
@@ -212,9 +211,7 @@ export default function SharedReportPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-start justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-primary flex items-center justify-center">
-                <Shield className="w-6 h-6 text-primary-foreground" />
-              </div>
+              <LunaLogo className="w-11 h-11 rounded-xl" />
               <div>
                 <h1 className="text-xl font-bold text-foreground tracking-tight">AI Screening Report</h1>
                 <p className="text-xs text-muted-foreground">LunaDX Clinical Screening Platform</p>

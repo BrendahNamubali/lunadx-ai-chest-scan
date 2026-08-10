@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Shield, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import LunaLogo from "@/components/LunaLogo";
 
 export default function HospitalRegisterPage() {
   const navigate = useNavigate();
@@ -62,9 +63,7 @@ export default function HospitalRegisterPage() {
     <div className="min-h-screen bg-muted/30 py-12 px-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-2.5 mb-8">
-          <div className="w-10 h-10 rounded-xl medical-gradient flex items-center justify-center">
-            <Shield className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <LunaLogo className="w-10 h-10 rounded-xl" />
           <span className="text-xl font-bold text-foreground">LunaDX</span>
         </div>
 

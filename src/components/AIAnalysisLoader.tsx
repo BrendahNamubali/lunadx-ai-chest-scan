@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Activity, Brain, Scan, HeartPulse, BarChart3 } from "lucide-react";
 import { useEffect, useState } from "react";
+import LunaLogo from "@/components/LunaLogo";
 
 const steps = [
   { text: "Preprocessing chest X-ray image…", icon: Scan },
@@ -76,7 +77,7 @@ export default function AIAnalysisLoader() {
             className="relative w-18 h-18 rounded-2xl medical-gradient flex items-center justify-center shadow-lg shadow-primary/25"
             style={{ width: 72, height: 72 }}
           >
-            <Shield className="w-9 h-9 text-primary-foreground" />
+            <LunaLogo className="w-12 h-12 rounded-xl" />
           </motion.div>
         </div>
 

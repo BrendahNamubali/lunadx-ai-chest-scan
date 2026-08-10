@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
 import { Shield, LogOut, Building2, LayoutDashboard, Users, CreditCard, Upload, BadgeCheck, Loader2, ShieldCheck, FileText } from "lucide-react";
 import { useAuth, dashboardPathFor, type AppRole } from "@/lib/auth";
+import LunaLogo from "@/components/LunaLogo";
 
 const NAV: Record<AppRole, { to: string; label: string; icon: typeof Shield }[]> = {
   super_admin: [
@@ -47,9 +48,7 @@ export function SaasLayout({ allow }: { allow: AppRole[] }) {
       <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar flex flex-col z-30">
         <div className="p-5 border-b border-sidebar-border">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
-              <Shield className="w-5 h-5 text-sidebar-primary-foreground" />
-            </div>
+            <LunaLogo />
             <div>
               <h1 className="text-base font-bold text-sidebar-primary-foreground tracking-tight">LunaDX</h1>
               <p className="text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.15em]">

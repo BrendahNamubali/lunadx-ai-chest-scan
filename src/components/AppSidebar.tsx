@@ -1,11 +1,12 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2, Lock } from "lucide-react";
+import { LayoutDashboard, Users, Upload, History, LogOut, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2, Lock } from "lucide-react";
 import { getCurrentUser, logout } from "@/lib/store";
 import { usePermissions } from "@/lib/permissions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import LunaLogo from "@/components/LunaLogo";
 
 const getNavItems = (perms: { canUploadScans: boolean; canManageOrganization: boolean }) => [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", allowed: true },
@@ -34,9 +35,7 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       {/* Logo */}
       <div className="p-5 border-b border-sidebar-border">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
-            <Shield className="w-5 h-5 text-sidebar-primary-foreground" />
-          </div>
+          <LunaLogo />
           <div>
             <h1 className="text-base font-bold text-sidebar-primary-foreground tracking-tight">LunaDX</h1>
             <p className="text-[10px] text-sidebar-foreground/50 uppercase tracking-[0.15em]">AI Screening</p>

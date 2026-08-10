@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Clock, ShieldAlert, Ban, Shield } from "lucide-react";
+import { Clock, ShieldAlert, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth, dashboardPathFor } from "@/lib/auth";
 import { useEffect } from "react";

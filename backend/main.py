@@ -243,8 +243,9 @@ def get_local_model():
         _processor = AutoImageProcessor.from_pretrained("lxyuan/vit-xray-pneumonia-classification")
         _model = AutoModelForImageClassification.from_pretrained("lxyuan/vit-xray-pneumonia-classification")
         _model.eval()
+        print("DEBUG label mapping:", _model.config.id2label)
     return _model, _processor
-
+    
 def call_huggingface_model(image: Image.Image):
     import torch
     import torch.nn.functional as F
@@ -257,10 +258,11 @@ def call_huggingface_model(image: Image.Image):
 
     probs = F.softmax(logits, dim=-1)[0]
 
-    predictions = {
-        "Normal": round(probs[0].item(), 4),
-        "Pneumonia": round(probs[1].item(), 4),
-    }
+    id2label = model.config.id2label
+    predictions = {}
+    for idx, label in id2label.items():
+        normalized_label = "Normal" if label.upper() == "NORMAL" else "Pneumonia"
+        predictions[normalized_label] = round(probs[idx].item(), 4)
 
     return predictions
 

@@ -20,37 +20,40 @@ import TriageQueuePage from "./pages/TriageQueuePage";
 import BillingPage from "./pages/BillingPage";
 import OrganizationPage from "./pages/OrganizationPage";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./lib/auth";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/report/:scanId" element={<SharedReportPage />} />
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/patients" element={<PatientsPage />} />
-            <Route path="/patients/:patientId" element={<PatientRecordPage />} />
-            <Route path="/upload" element={<UploadPage />} />
-            <Route path="/mobile-upload" element={<MobileUploadPage />} />
-            <Route path="/results/:scanId" element={<ResultsPage />} />
-            <Route path="/history" element={<HistoryPage />} />
-            <Route path="/demo" element={<DemoCasesPage />} />
-            <Route path="/analytics" element={<AnalyticsDashboardPage />} />
-            <Route path="/triage" element={<TriageQueuePage />} />
-            <Route path="/billing" element={<BillingPage />} />
-            <Route path="/organization" element={<OrganizationPage />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/report/:scanId" element={<SharedReportPage />} />
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/patients" element={<PatientsPage />} />
+              <Route path="/patients/:patientId" element={<PatientRecordPage />} />
+              <Route path="/upload" element={<UploadPage />} />
+              <Route path="/mobile-upload" element={<MobileUploadPage />} />
+              <Route path="/results/:scanId" element={<ResultsPage />} />
+              <Route path="/history" element={<HistoryPage />} />
+              <Route path="/demo" element={<DemoCasesPage />} />
+              <Route path="/analytics" element={<AnalyticsDashboardPage />} />
+              <Route path="/triage" element={<TriageQueuePage />} />
+              <Route path="/billing" element={<BillingPage />} />
+              <Route path="/organization" element={<OrganizationPage />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

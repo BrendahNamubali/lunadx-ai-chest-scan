@@ -1,12 +1,11 @@
 import { Link } from "react-router-dom";
-import logoAsset from "@/assets/lunadx-logo.png.asset.json";
-import logoLightAsset from "@/assets/lunadx-logo-light.png.asset.json";
+import logoAsset from "@/assets/LunaDx logo icon version 2.png";
 import { cn } from "@/lib/utils";
 import { useAuth, dashboardPathFor } from "@/lib/auth";
 
 type LunaLogoProps = {
   className?: string;
-  /** "dark" renders the navy mark (light surfaces), "light" the white mark (dark surfaces). */
+  /** Retained for compatibility with existing callers. */
   variant?: "dark" | "light";
   /** When true, wraps the mark in a role-aware home link. */
   asLink?: boolean;
@@ -14,12 +13,11 @@ type LunaLogoProps = {
   fallbackTo?: string;
 };
 
-/** Official LunaDX mark, transparent — no container, border or shadow. */
-export default function LunaLogo({ className, variant = "dark", asLink, fallbackTo = "/" }: LunaLogoProps) {
-  const asset = variant === "light" ? logoLightAsset : logoAsset;
+/** Official LunaDX mark — no container, border or shadow. */
+export default function LunaLogo({ className, asLink, fallbackTo = "/" }: LunaLogoProps) {
   const img = (
     <img
-      src={asset.url}
+      src={logoAsset}
       alt="LunaDX logo"
       className={cn("object-contain shrink-0 select-none", className ?? "w-9 h-9")}
     />

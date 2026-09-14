@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Shield, AlertCircle, Building2, MapPin, Mail, User, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { AlertCircle, Building2, MapPin, Mail, User, Lock } from "lucide-react";
 import { login, createOrganization } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LunaLogo from "@/components/LunaLogo";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -61,10 +62,7 @@ export default function LoginPage() {
       {/* Left - Branding */}
       <div className="hidden lg:flex lg:w-1/2 medical-gradient items-center justify-center p-12">
         <div className="max-w-md text-center">
-          <div className="w-20 h-20 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-8">
-            <Shield className="w-10 h-10 text-primary-foreground" />
-          </div>
-          <h1 className="text-4xl font-bold text-primary-foreground mb-4 tracking-tight">LunaDX</h1>
+          <LunaLogo variant="light" className="w-64 h-20 mx-auto mb-8" />
           <p className="text-lg text-primary-foreground/80 mb-2">AI-Assisted Clinical Screening</p>
           <p className="text-sm text-primary-foreground/60 leading-relaxed">
             Organization-level deployment for hospitals and clinics.
@@ -76,11 +74,8 @@ export default function LoginPage() {
       {/* Right - Forms */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2.5 mb-8">
-            <div className="w-10 h-10 rounded-xl medical-gradient flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">LunaDX</span>
+          <div className="lg:hidden mb-8">
+            <LunaLogo className="w-40 h-12" asLink />
           </div>
 
           {signupSuccess ? (

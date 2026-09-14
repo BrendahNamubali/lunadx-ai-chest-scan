@@ -51,7 +51,12 @@ export default function LandingPage() {
       {/* Nav */}
       <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
-          <LunaLogo className="w-32 h-10" asLink />
+          <Link to="/" aria-label="LunaDX home" className="flex items-center gap-2.5">
+            <span className="flex h-10 w-10 items-center justify-center rounded-[28%] border border-primary/20 bg-background p-1 shadow-sm">
+              <LunaLogo className="h-full w-full" />
+            </span>
+            <span className="text-lg font-bold tracking-tight">LunaDX</span>
+          </Link>
           <div className="flex items-center gap-3">
             <Link to="/login">
               <Button variant="ghost" size="sm">Sign In</Button>

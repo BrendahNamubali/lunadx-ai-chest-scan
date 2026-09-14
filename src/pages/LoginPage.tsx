@@ -62,7 +62,9 @@ export default function LoginPage() {
       {/* Left - Branding */}
       <div className="hidden lg:flex lg:w-1/2 medical-gradient items-center justify-center p-12">
         <div className="max-w-md text-center">
-          <LunaLogo variant="light" className="w-64 h-20 mx-auto mb-8" />
+          <div className="flex h-32 w-32 items-center justify-center rounded-[28%] border-2 border-primary-foreground/60 bg-background p-3 mx-auto mb-8 shadow-lg">
+            <LunaLogo className="h-full w-full" />
+          </div>
           <p className="text-lg text-primary-foreground/80 mb-2">AI-Assisted Clinical Screening</p>
           <p className="text-sm text-primary-foreground/60 leading-relaxed">
             Organization-level deployment for hospitals and clinics.
@@ -74,8 +76,11 @@ export default function LoginPage() {
       {/* Right - Forms */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden mb-8">
-            <LunaLogo className="w-40 h-12" asLink />
+          <div className="lg:hidden mb-8 flex items-center gap-2.5">
+            <Link to="/" aria-label="LunaDX home" className="flex h-12 w-12 items-center justify-center rounded-[28%] border border-primary/20 bg-background p-1 shadow-sm">
+              <LunaLogo className="h-full w-full" />
+            </Link>
+            <span className="text-xl font-bold text-foreground">LunaDX</span>
           </div>
 
           {signupSuccess ? (

@@ -1,0 +1,38 @@
+# Production-ready requirements - tested versions
+# FastAPI and web server
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# Database (PostgreSQL for production)
+sqlalchemy==2.0.23
+alembic==1.12.1
+psycopg2-binary==2.9.7
+
+# Authentication and security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# AI and ML (compatible versions)
+torch==2.1.0
+torchvision==0.16.0
+numpy==1.24.3
+pillow==10.0.0
+
+# Medical imaging
+pydicom==2.4.4
+
+# HTTP and API
+httpx==0.25.2
+pydantic==2.5.0
+
+# Image processing
+matplotlib==3.7.2
+opencv-python==4.8.0.76
+
+# Development and utilities
+python-dotenv==1.0.0
+
+# Optional: GPU support (uncomment if you have CUDA)
+# torch==2.1.0+cu118 --index https://download.pytorch.org/whl/cu118
+# torchvision==0.16.0+cu118 --index https://download.pytorch.org/whl/cu118

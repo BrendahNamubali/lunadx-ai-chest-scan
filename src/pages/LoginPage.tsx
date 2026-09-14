@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, Building2, MapPin, Mail, User, Lock } from "lucide-react";
 import { login, createOrganization } from "@/lib/store";
 import { Button } from "@/components/ui/button";

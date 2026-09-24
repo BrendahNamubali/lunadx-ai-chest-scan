@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Clock, ShieldAlert, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth, dashboardPathFor } from "@/lib/auth";
+import { useAuth, dashboardPathFor, hasActiveSubscription } from "@/lib/auth";
 import { useEffect } from "react";
 import LunaLogo from "@/components/LunaLogo";
 
@@ -9,13 +9,22 @@ export default function PendingApprovalPage() {
   const { hospital, role, session, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!loading && hospital?.status === "approved" && role) navigate(dashboardPathFor(role), { replace: true });
-    if (!loading && !session) navigate("/login", { replace: true });
-  }, [loading, hospital, role, session, navigate]);
+  const lapsedClinician = role === "clinician" && hospital?.status === "approved" && !hasActiveSubscription(hospital);
 
-  const status = hospital?.status ?? "pending";
+  useEffect(() => {
+    if (!loading && hospital?.status === "approved" && role && !lapsedClinician) {
+      navigate(dashboardPathFor(role), { replace: true });
+    }
+    if (!loading && !session) navigate("/login", { replace: true });
+  }, [loading, hospital, role, session, navigate, lapsedClinician]);
+
+  const status = lapsedClinician ? "expired" : hospital?.status ?? "pending";
   const config = {
+    expired: {
+      icon: ShieldAlert,
+      title: "Subscription expired",
+      body: "Your hospital's LunaDX subscription has expired. Ask your hospital admin to renew it to continue screening.",
+    },
     pending: {
       icon: Clock,
       title: "Registration under review",

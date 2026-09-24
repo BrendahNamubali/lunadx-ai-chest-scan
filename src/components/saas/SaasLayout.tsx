@@ -1,6 +1,6 @@
-import { NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
 import { Shield, LogOut, Building2, LayoutDashboard, Users, CreditCard, Upload, BadgeCheck, Loader2, ShieldCheck, FileText } from "lucide-react";
-import { useAuth, dashboardPathFor, type AppRole } from "@/lib/auth";
+import { useAuth, dashboardPathFor, hasActiveSubscription, type AppRole } from "@/lib/auth";
 import LunaLogo from "@/components/LunaLogo";
 
 const NAV: Record<AppRole, { to: string; label: string; icon: typeof Shield }[]> = {
@@ -40,8 +40,23 @@ export function SaasLayout({ allow }: { allow: AppRole[] }) {
   if (role !== "super_admin" && hospital && hospital.status !== "approved") {
     return <Navigate to="/pending-approval" replace />;
   }
+  if (role === "clinician" && !hasActiveSubscription(hospital)) {
+    return <Navigate to="/pending-approval" replace />;
+  }
 
   const items = NAV[role];
+  const expiresAt = hospital?.subscription_expires_at ? new Date(hospital.subscription_expires_at) : null;
+  const daysLeft = expiresAt ? Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000) : null;
+  const banner =
+    role !== "hospital_admin" || !hospital
+      ? null
+      : !hasActiveSubscription(hospital)
+        ? { tone: "destructive", text: "Your subscription has expired. Clinicians can't sign in until you renew." }
+        : hospital.subscription_status === "trial" && daysLeft !== null
+          ? { tone: "info", text: `Free trial: ${Math.max(daysLeft, 0)} day${daysLeft === 1 ? "" : "s"} left.` }
+          : hospital.subscription_status === "active" && daysLeft !== null && daysLeft <= 5
+            ? { tone: "info", text: `Your plan renews in ${Math.max(daysLeft, 0)} day${daysLeft === 1 ? "" : "s"}.` }
+            : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -112,6 +127,20 @@ export function SaasLayout({ allow }: { allow: AppRole[] }) {
       </aside>
 
       <main className="ml-64 p-8">
+        {banner && (
+          <div
+            className={`mb-6 flex flex-wrap items-center gap-3 rounded-lg border px-4 py-3 text-sm ${
+              banner.tone === "destructive"
+                ? "border-destructive/30 bg-destructive/5 text-destructive"
+                : "border-primary/20 bg-primary/5 text-foreground"
+            }`}
+          >
+            <span>{banner.text}</span>
+            <Link to="/hospital/subscription" className="ml-auto font-medium underline">
+              {banner.tone === "destructive" ? "Renew now" : "View plans"}
+            </Link>
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

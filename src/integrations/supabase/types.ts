@@ -33,6 +33,7 @@ export type Database = {
           rejection_reason: string | null
           status: Database["public"]["Enums"]["hospital_status"]
           subscription_plan: string
+          subscription_expires_at: string | null
           subscription_status: Database["public"]["Enums"]["subscription_status"]
         }
         Insert: {
@@ -53,6 +54,7 @@ export type Database = {
           rejection_reason?: string | null
           status?: Database["public"]["Enums"]["hospital_status"]
           subscription_plan?: string
+          subscription_expires_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
         }
         Update: {
@@ -73,9 +75,85 @@ export type Database = {
           rejection_reason?: string | null
           status?: Database["public"]["Enums"]["hospital_status"]
           subscription_plan?: string
+          subscription_expires_at?: string | null
           subscription_status?: Database["public"]["Enums"]["subscription_status"]
         }
         Relationships: []
+      }
+      payments: {
+        Row: {
+          activated_at: string | null
+          amount: number
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          hospital_id: string
+          id: string
+          period_months: number
+          phone: string
+          plan_slug: string
+          provider: string
+          provider_reference: string | null
+          raw_response: Json | null
+          status: Database["public"]["Enums"]["payment_status"]
+          status_message: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          amount: number
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string
+          hospital_id: string
+          id?: string
+          period_months?: number
+          phone: string
+          plan_slug: string
+          provider?: string
+          provider_reference?: string | null
+          raw_response?: Json | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          status_message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          amount?: number
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          hospital_id?: string
+          id?: string
+          period_months?: number
+          phone?: string
+          plan_slug?: string
+          provider?: string
+          provider_reference?: string | null
+          raw_response?: Json | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          status_message?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_plan_slug_fkey"
+            columns: ["plan_slug"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["slug"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -156,6 +234,7 @@ export type Database = {
           max_scans_per_month: number
           name: string
           price_monthly_cents: number
+          price_ugx: number
           slug: string
           sort_order: number
         }
@@ -170,6 +249,7 @@ export type Database = {
           max_scans_per_month?: number
           name: string
           price_monthly_cents?: number
+          price_ugx?: number
           slug: string
           sort_order?: number
         }
@@ -184,6 +264,7 @@ export type Database = {
           max_scans_per_month?: number
           name?: string
           price_monthly_cents?: number
+          price_ugx?: number
           slug?: string
           sort_order?: number
         }
@@ -264,6 +345,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_subscription: { Args: { p_payment_id: string }; Returns: undefined }
       current_hospital_id: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -272,11 +354,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      expire_subscriptions: { Args: never; Returns: number }
       is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "super_admin" | "hospital_admin" | "clinician"
       hospital_status: "pending" | "approved" | "rejected" | "suspended"
+      payment_status: "pending" | "success" | "failed"
       subscription_status:
         | "pending"
         | "trial"
@@ -412,6 +496,7 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "hospital_admin", "clinician"],
       hospital_status: ["pending", "approved", "rejected", "suspended"],
+      payment_status: ["pending", "success", "failed"],
       subscription_status: [
         "pending",
         "trial",

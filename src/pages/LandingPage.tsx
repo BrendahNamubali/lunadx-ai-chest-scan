@@ -1,9 +1,12 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Upload, Brain, FileText, Users, Activity, ChevronRight, AlertTriangle } from "lucide-react";
 import PrototypeDemo from "@/components/PrototypeDemo";
 import LunaLogo from "@/components/LunaLogo";
+import { CurrencyToggle, PricingFootnote, PricingPlans } from "@/components/pricing/PricingPlans";
+import { TRIAL_DAYS, isCustomPriced, useDisplayCurrency, usePlans } from "@/lib/pricing";
 
 const features = [
   {
@@ -46,6 +49,14 @@ const stats = [
 ];
 
 export default function LandingPage() {
+  const { plans } = usePlans();
+  const [currency, setCurrency] = useDisplayCurrency();
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
+  }, [hash, plans.length]);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Nav */}
@@ -58,6 +69,9 @@ export default function LandingPage() {
             <span className="text-lg font-bold tracking-tight">LunaDX</span>
           </Link>
           <div className="flex items-center gap-3">
+            <a href="#pricing" className="hidden sm:inline text-sm font-medium text-muted-foreground hover:text-foreground">
+              Pricing
+            </a>
             <Link to="/login">
               <Button variant="ghost" size="sm">Sign In</Button>
             </Link>
@@ -169,6 +183,35 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="py-20 px-6 scroll-mt-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-3">Simple, per-facility pricing</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto mb-6">
+              Every approved hospital starts with a {TRIAL_DAYS}-day free trial. Pay monthly with mobile money. No contracts.
+            </p>
+            <CurrencyToggle value={currency} onChange={setCurrency} />
+          </div>
+
+          <PricingPlans
+            plans={plans}
+            currency={currency}
+            renderAction={(plan) => (
+              <Link to={`/register-hospital?plan=${plan.slug}`}>
+                <Button
+                  className={`w-full ${plan.slug === "professional" ? "cta-gradient text-cta-foreground border-0 hover:opacity-90" : ""}`}
+                  variant={plan.slug === "professional" ? "default" : "outline"}
+                >
+                  {isCustomPriced(plan) ? "Talk to sales" : `Start ${TRIAL_DAYS}-day free trial`}
+                </Button>
+              </Link>
+            )}
+          />
+          <PricingFootnote currency={currency} />
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="pb-20 px-6">
         <div className="max-w-3xl mx-auto">
@@ -178,9 +221,9 @@ export default function LandingPage() {
               <p className="opacity-90 mb-6 max-w-lg mx-auto text-sm">
                 Start using LunaDX today to screen patients faster and prioritize high-risk cases for further testing.
               </p>
-              <Link to="/login">
-                <Button variant="secondary" size="lg" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">Get Started Free</Button>
-              </Link>
+              <a href="#pricing">
+                <Button variant="secondary" size="lg" className="cta-gradient text-cta-foreground border-0 hover:opacity-90">Start your free trial</Button>
+              </a>
             </CardContent>
           </Card>
         </div>

@@ -1,1 +1,6 @@
 project_id = "zrvjngmgczsxkejxrgoy"
+
+# Authenticates internally: signed-in users via their JWT, the scheduled
+# reconcile job via the x-cron-secret header.
+[functions.iotec-status]
+verify_jwt = false

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertCircle, Building2, MapPin, Mail, User, Lock } from "lucide-react";
-import { login, createOrganization } from "@/lib/store";
+import { AlertCircle, Building2, CheckCircle2, Loader2 } from "lucide-react";
+import { login } from "@/lib/store";
+import { useAuth, dashboardPathFor } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,51 +11,28 @@ import LunaLogo from "@/components/LunaLogo";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { session, role, loading, signIn } = useAuth();
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  // Signup state
-  const [hospitalName, setHospitalName] = useState("");
-  const [location, setLocation] = useState("");
-  const [adminName, setAdminName] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
-  const [adminPassword, setAdminPassword] = useState("");
-  const [signupSuccess, setSignupSuccess] = useState(false);
+  useEffect(() => {
+    if (!loading && session) navigate(role ? dashboardPathFor(role) : "/pending-approval", { replace: true });
+  }, [loading, session, role, navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const user = login(loginEmail, loginPassword);
-    if (user) navigate("/dashboard");
+    setSubmitting(true);
+    const result = await signIn(loginEmail, loginPassword);
+    setSubmitting(false);
+    if (!result.error) return;
+
+    const demoUser = login(loginEmail, loginPassword);
+    if (demoUser) navigate("/dashboard");
     else setError("Invalid credentials. Check email and password.");
-  };
-
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (!hospitalName || !location || !adminName || !adminEmail || !adminPassword) {
-      setError("All fields are required.");
-      return;
-    }
-    if (adminPassword.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
-    try {
-      createOrganization({
-        name: hospitalName,
-        location,
-        adminEmail,
-        adminName,
-        password: adminPassword,
-      });
-      setSignupSuccess(true);
-    } catch {
-      setError("Failed to create organization.");
-    }
   };
 
   return (
@@ -83,27 +61,7 @@ export default function LoginPage() {
             <span className="text-xl font-bold text-foreground">LunaDX</span>
           </div>
 
-          {signupSuccess ? (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto">
-                <Building2 className="w-8 h-8 text-accent" />
-              </div>
-              <h2 className="text-2xl font-bold text-foreground">Organization Created!</h2>
-              <p className="text-sm text-muted-foreground">
-                Your hospital account has been set up. You can now sign in as the organization admin.
-              </p>
-              <Button
-                className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90"
-                onClick={() => {
-                  setSignupSuccess(false);
-                  setLoginEmail(adminEmail);
-                }}
-              >
-                Go to Sign In
-              </Button>
-            </div>
-          ) : (
-            <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue="login" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Register Hospital</TabsTrigger>
@@ -130,8 +88,8 @@ export default function LoginPage() {
                     <Label htmlFor="login-password">Password</Label>
                     <Input id="login-password" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className="mt-1.5" required />
                   </div>
-                  <Button type="submit" className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90">
-                    Sign In
+                  <Button type="submit" disabled={submitting} className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90">
+                    {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Sign In
                   </Button>
                 </form>
 
@@ -146,46 +104,26 @@ export default function LoginPage() {
               {/* Signup Tab */}
               <TabsContent value="signup">
                 <h2 className="text-xl font-bold text-foreground mb-1">Register Your Hospital</h2>
-                <p className="text-muted-foreground text-sm mb-6">Create an organization account to get started</p>
-
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div>
-                    <Label htmlFor="hospital-name" className="flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5" /> Hospital Name
-                    </Label>
-                    <Input id="hospital-name" value={hospitalName} onChange={(e) => setHospitalName(e.target.value)} placeholder="Metro Health Clinic" className="mt-1.5" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="location" className="flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5" /> Location
-                    </Label>
-                    <Input id="location" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Kampala, Uganda" className="mt-1.5" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="admin-name" className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5" /> Admin Name
-                    </Label>
-                    <Input id="admin-name" value={adminName} onChange={(e) => setAdminName(e.target.value)} placeholder="Dr. James Wilson" className="mt-1.5" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="admin-email" className="flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5" /> Admin Email
-                    </Label>
-                    <Input id="admin-email" type="email" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} placeholder="admin@hospital.com" className="mt-1.5" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="admin-password" className="flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5" /> Password
-                    </Label>
-                    <Input id="admin-password" type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} placeholder="Min 6 characters" className="mt-1.5" required />
-                  </div>
-                  <Button type="submit" className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90">
-                    Create Organization
+                <p className="text-muted-foreground text-sm mb-6">
+                  Submit your facility for review. Once approved you get a 14-day free trial, then pay monthly with MTN MoMo or Airtel Money.
+                </p>
+                <ul className="space-y-2 mb-6 text-sm text-muted-foreground">
+                  {["One hospital admin account", "Clinician accounts based on your plan", "Chest X-ray screening for TB & pneumonia"].map((item) => (
+                    <li key={item} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" /> {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/register-hospital">
+                  <Button className="w-full cta-gradient text-cta-foreground border-0 hover:opacity-90">
+                    <Building2 className="w-4 h-4 mr-2" /> Start hospital registration
                   </Button>
-                </form>
+                </Link>
+                <p className="text-xs text-muted-foreground text-center mt-4">
+                  Compare plans on the <Link to="/#pricing" className="underline hover:text-foreground">pricing page</Link>.
+                </p>
               </TabsContent>
             </Tabs>
-          )}
         </div>
       </div>
     </div>

@@ -22,6 +22,14 @@ Deno.serve(async (req) => {
 
     const admin = adminClient();
 
+    const { data: chosenPlan } = await admin
+      .from("subscription_plans")
+      .select("slug, max_clinicians")
+      .eq("slug", String(body.plan ?? "basic"))
+      .eq("is_active", true)
+      .maybeSingle();
+    const plan = chosenPlan ?? { slug: "basic", max_clinicians: 3 };
+
     const { data: existing } = await admin
       .from("hospitals")
       .select("id")
@@ -44,9 +52,9 @@ Deno.serve(async (req) => {
         expected_clinicians: body.expectedClinicians ? Number(body.expectedClinicians) : null,
         license_info: body.licenseInfo ?? null,
         status: "pending",
-        subscription_plan: "basic",
+        subscription_plan: plan.slug,
         subscription_status: "pending",
-        max_clinicians: 3,
+        max_clinicians: plan.max_clinicians,
       })
       .select()
       .single();
@@ -77,7 +85,7 @@ Deno.serve(async (req) => {
     });
     await admin.from("subscriptions").insert({
       hospital_id: hospital.id,
-      plan_name: "basic",
+      plan_name: plan.slug,
       status: "pending",
     });
 

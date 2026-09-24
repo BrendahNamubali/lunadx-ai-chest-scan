@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,17 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { formatPrice, type Plan } from "@/pages/hospital/HospitalSubscriptionPage";
+import { formatPlanPrice, usePlans, type Plan } from "@/lib/pricing";
 
 export default function SuperAdminPlansPage() {
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const { plans, setPlans } = usePlans({ includeInactive: true });
   const [saving, setSaving] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    const { data } = await supabase.from("subscription_plans").select("*").order("sort_order");
-    setPlans((data ?? []) as Plan[]);
-  }, []);
-  useEffect(() => { load(); }, [load]);
 
   const patch = (id: string, changes: Partial<Plan>) =>
     setPlans((prev) => prev.map((p) => (p.id === id ? { ...p, ...changes } : p)));
@@ -29,6 +23,7 @@ export default function SuperAdminPlansPage() {
         name: plan.name,
         description: plan.description,
         price_monthly_cents: plan.price_monthly_cents,
+        price_ugx: plan.price_ugx,
         max_clinicians: plan.max_clinicians,
         max_scans_per_month: plan.max_scans_per_month,
         is_active: plan.is_active,
@@ -57,13 +52,27 @@ export default function SuperAdminPlansPage() {
                 <Switch id={`active-${plan.id}`} checked={plan.is_active} onCheckedChange={(v) => patch(plan.id, { is_active: v })} />
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
               <div>
                 <Label>Display name</Label>
                 <Input className="mt-1.5" value={plan.name} onChange={(e) => patch(plan.id, { name: e.target.value })} />
               </div>
               <div>
-                <Label>Monthly price (USD, 0 = custom pricing)</Label>
+                <Label>Monthly price (UGX, charged)</Label>
+                <Input
+                  className="mt-1.5"
+                  type="number"
+                  min={0}
+                  step="1000"
+                  value={plan.price_ugx}
+                  onChange={(e) => patch(plan.id, { price_ugx: Math.round(Number(e.target.value) || 0) })}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {plan.price_ugx === 0 ? "0 = custom pricing (no online payment)" : `Mobile money charge: ${formatPlanPrice(plan, "UGX")}`}
+                </p>
+              </div>
+              <div>
+                <Label>Monthly price (USD, display)</Label>
                 <Input
                   className="mt-1.5"
                   type="number"
@@ -77,7 +86,7 @@ export default function SuperAdminPlansPage() {
                   }
                 />
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  {plan.price_monthly_cents === 0 ? "Custom pricing" : `Hospitals see ${formatPrice(plan)}`}
+                  {plan.price_monthly_cents === 0 ? "Custom pricing" : `Shown as ${formatPlanPrice(plan, "USD")}/mo`}
                 </p>
               </div>
               <div>
@@ -90,7 +99,7 @@ export default function SuperAdminPlansPage() {
                 <Input className="mt-1.5" type="number" value={plan.max_scans_per_month}
                   onChange={(e) => patch(plan.id, { max_scans_per_month: Number(e.target.value) })} />
               </div>
-              <div className="sm:col-span-2 lg:col-span-4">
+              <div className="sm:col-span-2 lg:col-span-5">
                 <Label>Description</Label>
                 <Input className="mt-1.5" value={plan.description ?? ""} onChange={(e) => patch(plan.id, { description: e.target.value })} />
               </div>

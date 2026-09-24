@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Building2, Check, X, PauseCircle, PlayCircle, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Hospital } from "@/lib/auth";
+import { TRIAL_DAYS } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +59,7 @@ export default function SuperAdminHospitalsPage() {
 
     if (status === "approved") {
       const start = new Date();
-      const renewal = new Date(start); renewal.setDate(renewal.getDate() + 30);
+      const renewal = new Date(start); renewal.setDate(renewal.getDate() + TRIAL_DAYS);
       await supabase.from("subscriptions").update({
         status: "trial",
         start_date: start.toISOString().slice(0, 10),

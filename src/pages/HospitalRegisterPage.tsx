@@ -1,14 +1,18 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import LunaLogo from "@/components/LunaLogo";
+import { TRIAL_DAYS, usePlans } from "@/lib/pricing";
 
 export default function HospitalRegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { plans } = usePlans();
+  const [plan, setPlan] = useState(searchParams.get("plan") ?? "basic");
   const [form, setForm] = useState({
     hospitalName: "", facilityType: "", location: "", address: "",
     contactPerson: "", email: "", phone: "", expectedClinicians: "",
@@ -24,7 +28,7 @@ export default function HospitalRegisterPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); setSubmitting(true);
-    const { data, error: fnError } = await supabase.functions.invoke("register-hospital", { body: form });
+    const { data, error: fnError } = await supabase.functions.invoke("register-hospital", { body: { ...form, plan } });
     setSubmitting(false);
     const message = (data as { error?: string } | null)?.error;
     if (fnError || message) { setError(message ?? "Registration failed. Please try again."); return; }
@@ -71,7 +75,23 @@ export default function HospitalRegisterPage() {
           <h1 className="text-2xl font-bold text-foreground mb-1">Register your hospital</h1>
           <p className="text-sm text-muted-foreground mb-6">
             Applications are reviewed by the LunaDX team before your facility account is activated.
+            Approved hospitals get a {TRIAL_DAYS}-day free trial.
           </p>
+
+          <div className="mb-6">
+            <Label htmlFor="plan">Plan</Label>
+            <select
+              id="plan"
+              value={plan}
+              onChange={(e) => setPlan(e.target.value)}
+              className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {plans.map((p) => (
+                <option key={p.slug} value={p.slug}>{p.name}</option>
+              ))}
+            </select>
+            <p className="text-xs text-muted-foreground mt-1">You can change plans at any time from your subscription page.</p>
+          </div>
 
           {error && (
             <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/5 text-destructive text-sm mb-4">

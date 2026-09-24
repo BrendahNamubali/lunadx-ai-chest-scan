@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
 
     const { data: hospital } = await admin
       .from("hospitals")
-      .select("id, status, max_clinicians")
+      .select("id, status, max_clinicians, subscription_status")
       .eq("id", hospitalId)
       .single();
     if (!hospital || hospital.status !== "approved") {
@@ -32,6 +32,9 @@ Deno.serve(async (req) => {
     const action = body.action as string;
 
     if (action === "create") {
+      if (!["trial", "active"].includes(hospital.subscription_status)) {
+        return json({ error: "Your subscription has expired. Renew it to add clinician accounts." }, 402, corsHeaders);
+      }
       const email = String(body.email ?? "").trim().toLowerCase();
       const fullName = String(body.fullName ?? "").trim();
       const password = String(body.password ?? "");

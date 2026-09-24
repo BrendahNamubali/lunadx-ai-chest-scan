@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -19,6 +19,7 @@ export interface Hospital {
   status: "pending" | "approved" | "rejected" | "suspended";
   subscription_plan: string;
   subscription_status: "pending" | "trial" | "active" | "suspended" | "cancelled";
+  subscription_expires_at: string | null;
   max_clinicians: number;
   rejection_reason: string | null;
   approved_at: string | null;
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const loadedUid = useRef<string | undefined>(undefined);
 
   const loadContext = async (uid: string | undefined) => {
     if (!uid) {
@@ -81,7 +83,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      const uid = newSession?.user?.id;
       setSession(newSession);
+      if (uid === loadedUid.current) return;
+      loadedUid.current = uid;
+      setLoading(true);
       setTimeout(() => {
         loadContext(newSession?.user?.id).finally(() => setLoading(false));
       }, 0);
@@ -89,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
+      loadedUid.current = data.session?.user?.id;
       loadContext(data.session?.user?.id).finally(() => setLoading(false));
     });
 
@@ -132,6 +139,10 @@ export function dashboardPathFor(role: AppRole | null) {
   if (role === "hospital_admin") return "/hospital/dashboard";
   if (role === "clinician") return "/clinician/dashboard";
   return "/login";
+}
+
+export function hasActiveSubscription(hospital: Hospital | null) {
+  return !!hospital && (hospital.subscription_status === "trial" || hospital.subscription_status === "active");
 }
 
 export const PLAN_LABELS: Record<string, string> = {

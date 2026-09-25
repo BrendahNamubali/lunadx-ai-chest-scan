@@ -151,8 +151,9 @@ export default function UploadPage() {
       saveScan(scan);
       setAnalyzing(false);
       navigate(`/results/${scan.id}`);
-    } catch {
-      setAnalyzing(false); setAnalysisError(true); setErrorMessage("Sample analysis failed.");
+    } catch (err) {
+      setAnalyzing(false); setAnalysisError(true);
+      setErrorMessage(err instanceof Error ? err.message : "Sample analysis failed.");
     }
   };
 

@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Users, Upload, History, LogOut, Shield, Menu, BarChart3, ClipboardList, FlaskConical, FileText, CreditCard, Building2, Lock } from "lucide-react";
 import { getCurrentUser, logout, canUploadScans, canManageOrganization } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -21,9 +22,11 @@ const getNavItems = (role?: string) => [
 function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
   const user = getCurrentUser();
   const navigate = useNavigate();
+  const { session, signOut } = useAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     logout();
+    if (session) await signOut();
     navigate("/login");
   };
 

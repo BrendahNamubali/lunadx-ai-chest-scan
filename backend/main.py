@@ -2,7 +2,7 @@
 LunaDX analyze API — pneumonia (local ViT) and tuberculosis (HF JetX-GT) routes.
 Run: uvicorn main:app --port 8000  (from this directory, with venv + deps installed)
 """
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
 from typing import Optional, List
@@ -23,18 +23,87 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="LunaDX Screening API", version="1.1.0")
 
+DEFAULT_ORIGINS = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+EXTRA_ORIGINS = [o.strip() for o in os.getenv("ALLOW_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "http://127.0.0.1:8080",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=DEFAULT_ORIGINS + EXTRA_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Access control ────────────────────────────────────────────────────────────
+# Every analysis must carry the user's Supabase access token. The paywall rules
+# (approved hospital, active profile, valid subscription, monthly scan limit)
+# live in the public.scan_access database function, called as the user.
+SUPABASE_URL = (os.getenv("SUPABASE_URL") or os.getenv("VITE_SUPABASE_URL") or "").rstrip("/")
+SUPABASE_API_KEY = (
+    os.getenv("SUPABASE_ANON_KEY")
+    or os.getenv("SUPABASE_PUBLISHABLE_KEY")
+    or os.getenv("VITE_SUPABASE_PUBLISHABLE_KEY")
+    or ""
+)
+
+ACCESS_ERRORS = {
+    "NOT_AUTHENTICATED": (401, "Please sign in to run a screening."),
+    "NO_HOSPITAL": (403, "Your account is not linked to a hospital."),
+    "HOSPITAL_NOT_APPROVED": (403, "Your hospital has not been approved yet."),
+    "PROFILE_INACTIVE": (403, "Your account is not active. Contact your hospital admin."),
+    "SUBSCRIPTION_INACTIVE": (402, "Your hospital's subscription has expired. Ask your hospital admin to renew it."),
+    "SCAN_LIMIT_REACHED": (429, "Your hospital has reached its monthly scan limit. Upgrade your plan to continue."),
+}
+
+
+def _access_error(code: str, status: int, message: str) -> HTTPException:
+    return HTTPException(status_code=status, detail={"code": code, "message": message})
+
+
+def _bearer_token(request: Request) -> str:
+    header = request.headers.get("Authorization", "")
+    if not header.lower().startswith("bearer ") or not header[7:].strip():
+        raise _access_error("NOT_AUTHENTICATED", *ACCESS_ERRORS["NOT_AUTHENTICATED"])
+    return header[7:].strip()
+
+
+def check_scan_access(token: str, record: bool, analysis_type: str) -> dict:
+    if not SUPABASE_URL or not SUPABASE_API_KEY:
+        logger.error("SUPABASE_URL / SUPABASE_ANON_KEY not configured; refusing to run analysis")
+        raise _access_error("ACCESS_CONTROL_UNAVAILABLE", 503, "Screening is temporarily unavailable.")
+    try:
+        response = requests.post(
+            f"{SUPABASE_URL}/rest/v1/rpc/scan_access",
+            headers={
+                "apikey": SUPABASE_API_KEY,
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json",
+            },
+            json={"p_record": record, "p_analysis_type": analysis_type},
+            timeout=10,
+        )
+    except requests.RequestException as exc:
+        logger.error("scan_access request failed: %s", exc)
+        raise _access_error("ACCESS_CONTROL_UNAVAILABLE", 503, "Could not verify your subscription. Please try again.")
+
+    if response.status_code == 200:
+        return response.json()
+
+    try:
+        message = str(response.json().get("message", ""))
+    except ValueError:
+        message = ""
+    if message in ACCESS_ERRORS:
+        raise _access_error(message, *ACCESS_ERRORS[message])
+    if response.status_code in (401, 403):
+        raise _access_error("NOT_AUTHENTICATED", 401, "Your session has expired. Please sign in again.")
+    logger.error("scan_access unexpected response %s: %s", response.status_code, response.text)
+    raise _access_error("ACCESS_CONTROL_UNAVAILABLE", 503, "Could not verify your subscription. Please try again.")
 
 PNEUMONIA_MODEL_ID = "lxyuan/vit-xray-pneumonia-classification"
 TB_HF_MODEL_ID = "JetX-GT/hades-hellix-tb-linear-probe"
@@ -172,6 +241,7 @@ def normalize_screening_type(value: str) -> str:
 @app.post("/analyze")
 @app.post("/chexpert")
 async def analyze_xray(
+    request: Request,
     file: UploadFile = File(...),
     patient_id: Optional[str] = Form(None),
     clinical_notes: Optional[str] = Form(None),
@@ -181,6 +251,9 @@ async def analyze_xray(
     start = time.time()
     study_id = f"study-{datetime.now().strftime('%Y%m%d%H%M%S')}"
     mode = normalize_screening_type(screening_type)
+
+    token = _bearer_token(request)
+    check_scan_access(token, record=False, analysis_type=mode)
 
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
@@ -229,6 +302,13 @@ async def analyze_xray(
     elapsed_ms = int((time.time() - start) * 1000)
     logger.info("✅ %s analysis in %sms — %s", mode, elapsed_ms, predictions)
 
+    usage = None
+    try:
+        usage = check_scan_access(token, record=True, analysis_type=mode)
+    except HTTPException as exc:
+        # Access was verified before inference; don't discard a finished result.
+        logger.warning("Could not record scan event: %s", exc.detail)
+
     return {
         "success": True,
         "study_id": study_id,
@@ -247,6 +327,7 @@ async def analyze_xray(
         "tb_probability": round(tb_probability, 1),
         "pneumonia_probability": round(pneumonia_probability, 1),
         "used_simulation": False,
+        "usage": usage,
     }
 
 

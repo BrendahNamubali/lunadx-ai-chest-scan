@@ -1,10 +1,25 @@
 // LunaDX store - wired to FastAPI backend (http://127.0.0.1:8000)
 
 import { type ScreeningMode, normalizeScreeningMode } from "./screening";
+import { supabase } from "@/integrations/supabase/client";
 
 const BACKEND =
   import.meta.env.VITE_BACKEND_URL?.replace(/\/$/, "") ||
   "http://127.0.0.1:8000";
+
+/**
+ * The local demo workspace (hardcoded accounts, simulated AI results) is only
+ * available in development or when explicitly enabled for a demo deployment.
+ */
+export const DEMO_MODE = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEMO === "true";
+
+/** Thrown when the backend refuses a screening (not signed in, unpaid, over limit...). */
+export class ScreeningAccessError extends Error {
+  constructor(message: string, public code: string, public status: number) {
+    super(message);
+    this.name = "ScreeningAccessError";
+  }
+}
 
 // ── Types ──────────────────────────────────────────────
 
@@ -177,6 +192,7 @@ function getAllUsers(): (User & { password: string })[] {
 }
 
 export function login(email: string, password: string): User | null {
+  if (!DEMO_MODE) return null;
   const users = getAllUsers();
   const user = users.find((u) => u.email === email && u.password === password);
   if (user) {
@@ -194,6 +210,12 @@ export function logout() {
 export function getCurrentUser(): User | null {
   const data = localStorage.getItem(USER_KEY);
   return data ? JSON.parse(data) : null;
+}
+
+/** Mirrors the signed-in Supabase user into the local workspace user used by the screening pages. */
+export function setSessionUser(user: User) {
+  const next = JSON.stringify(user);
+  if (localStorage.getItem(USER_KEY) !== next) localStorage.setItem(USER_KEY, next);
 }
 
 export function getOrgMembers(orgId: string): User[] {
@@ -473,35 +495,9 @@ export async function analyzeXray(
 ): Promise<AIAnalysisResponse> {
   const mode = normalizeScreeningMode(screeningMode);
 
-  try {
-    const blob = await (await fetch(imageDataUrl)).blob();
-    const ext = blob.type.includes("png") ? "png" : "jpg";
-    const file = new File([blob], `xray.${ext}`, { type: blob.type || "image/jpeg" });
-
-    const fd = new FormData();
-    fd.append("file", file);
-    if (patientId) fd.append("patient_id", patientId);
-    if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
-    fd.append("view_position", viewPosition || "PA");
-    fd.append("screening_type", mode);
-
-    const res = await fetch(`${BACKEND}/analyze`, {
-      method: "POST",
-      body: fd,
-    });
-
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("Analyze API error:", err);
-      throw new Error(err);
-    }
-
-    const data = (await res.json()) as BackendResponse;
-    console.log(`✓ ${mode} backend connected`);
-    return mapBackendToUI(data, mode);
-  } catch (err) {
-    console.warn("Analyze API failed, using simulation:", err);
-  }
+  const { data: { session } } = await supabase.auth.getSession();
+  if (session) return analyzeWithBackend(session.access_token, imageDataUrl, mode, patientId, clinicalNotes, viewPosition);
+  if (!DEMO_MODE) throw new ScreeningAccessError("Please sign in to run a screening.", "NOT_AUTHENTICATED", 401);
 
   const delay = 3000 + Math.random() * 2000;
   await new Promise((resolve) => setTimeout(resolve, delay));
@@ -523,11 +519,64 @@ export async function analyzeXray(
     pneumonia_probability: mode === "pneumonia" ? sim.pneumoniaRisk : 0,
     tb_probability: mode === "tuberculosis" ? sim.tbRisk : 0,
     heatmap_overlay_url: null,
-    ai_summary: summaries[Math.floor(Math.random() * summaries.length)],
+    ai_summary: `[DEMO - simulated result] ${summaries[Math.floor(Math.random() * summaries.length)]}`,
     _screeningMode: mode,
     _findings: sim.findings,
     _suggestions: sim.suggestions,
+    _usedSimulation: true,
   } as AIAnalysisResponse & Record<string, unknown>;
+}
+
+async function analyzeWithBackend(
+  accessToken: string,
+  imageDataUrl: string,
+  mode: ScreeningMode,
+  patientId?: string,
+  clinicalNotes?: string,
+  viewPosition?: string,
+): Promise<AIAnalysisResponse> {
+  const blob = await (await fetch(imageDataUrl)).blob();
+  const ext = blob.type.includes("png") ? "png" : "jpg";
+  const file = new File([blob], `xray.${ext}`, { type: blob.type || "image/jpeg" });
+
+  const fd = new FormData();
+  fd.append("file", file);
+  if (patientId) fd.append("patient_id", patientId);
+  if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
+  fd.append("view_position", viewPosition || "PA");
+  fd.append("screening_type", mode);
+
+  let res: Response;
+  try {
+    res = await fetch(`${BACKEND}/analyze`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: fd,
+    });
+  } catch {
+    throw new ScreeningAccessError("The screening service is unreachable. Please try again shortly.", "NETWORK_ERROR", 0);
+  }
+
+  if (!res.ok) {
+    let code = "ANALYSIS_FAILED";
+    let message = "The analysis failed. Please try again.";
+    try {
+      const body = await res.json();
+      const detail = body?.detail;
+      if (detail && typeof detail === "object") {
+        code = detail.code ?? code;
+        message = detail.message ?? message;
+      } else if (typeof detail === "string") {
+        message = detail;
+      }
+    } catch {
+      /* keep defaults */
+    }
+    throw new ScreeningAccessError(message, code, res.status);
+  }
+
+  const data = (await res.json()) as BackendResponse;
+  return mapBackendToUI(data, mode);
 }
 
 // ── simulateAI (unchanged) ─────────────────────────────

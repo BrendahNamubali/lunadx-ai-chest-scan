@@ -129,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     signOut: async () => {
       await supabase.auth.signOut();
+      localStorage.removeItem("lunadx_user");
       setRole(null);
       setHospital(null);
       setIsActive(false);

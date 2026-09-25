@@ -29,6 +29,7 @@ export default function MobileUploadPage() {
 
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("The analysis service could not process the request.");
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith("image/")) return;
@@ -100,9 +101,10 @@ export default function MobileUploadPage() {
       saveScan(scan);
       setAnalyzing(false);
       navigate(`/results/${scan.id}`);
-    } catch {
+    } catch (err) {
       setAnalyzing(false);
       setAnalysisError(true);
+      setErrorMessage(err instanceof Error ? err.message : "The analysis service could not process the request.");
     }
   };
 
@@ -142,9 +144,10 @@ export default function MobileUploadPage() {
       saveScan(scan);
       setAnalyzing(false);
       navigate(`/results/${scan.id}`);
-    } catch {
+    } catch (err) {
       setAnalyzing(false);
       setAnalysisError(true);
+      setErrorMessage(err instanceof Error ? err.message : "The analysis service could not process the request.");
     }
   };
 
@@ -414,7 +417,7 @@ export default function MobileUploadPage() {
               <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
               <div className="space-y-2">
                 <p className="text-sm font-medium text-foreground">AI analysis unavailable. Please try again.</p>
-                <p className="text-xs text-muted-foreground">The analysis service could not process the request.</p>
+                <p className="text-xs text-muted-foreground">{errorMessage}</p>
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" onClick={handleAnalyze} disabled={!patientId || !imageFile}>
                     Retry Analysis

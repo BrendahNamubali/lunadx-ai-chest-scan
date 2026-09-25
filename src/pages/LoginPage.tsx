@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, Building2, CheckCircle2, Loader2 } from "lucide-react";
-import { login } from "@/lib/store";
+import { DEMO_MODE, login } from "@/lib/store";
 import { useAuth, accessBlock, dashboardPathFor } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +34,7 @@ export default function LoginPage() {
     setSubmitting(false);
     if (!result.error) return;
 
-    const demoUser = login(loginEmail, loginPassword);
+    const demoUser = DEMO_MODE ? login(loginEmail, loginPassword) : null;
     if (demoUser) navigate("/dashboard");
     else setError("Invalid credentials. Check email and password.");
   };
@@ -104,12 +104,14 @@ export default function LoginPage() {
                   </Button>
                 </form>
 
-                <div className="mt-6 p-4 rounded-lg bg-muted text-xs text-muted-foreground space-y-1">
-                  <p className="font-medium text-foreground">Demo Accounts:</p>
-                  <p>Admin: admin@lunadx.com / admin123</p>
-                  <p>Radiologist: doctor@lunadx.com / doctor123</p>
-                  <p>Clinician: clinician@lunadx.com / clinician123</p>
-                </div>
+                {DEMO_MODE && (
+                  <div className="mt-6 p-4 rounded-lg bg-muted text-xs text-muted-foreground space-y-1">
+                    <p className="font-medium text-foreground">Demo Accounts (simulated results only):</p>
+                    <p>Admin: admin@lunadx.com / LunaDX@2026!</p>
+                    <p>Radiologist: doctor@lunadx.com / LunaDX@2026!</p>
+                    <p>Clinician: clinician@lunadx.com / LunaDX@2026!</p>
+                  </div>
+                )}
               </TabsContent>
 
               {/* Signup Tab */}

@@ -35,10 +35,22 @@ services:
     container_name: lunadx_backend
     environment:
       DATABASE_URL: postgresql://lunadx:password@db:5432/lunadx
-      GROQ_API_KEY: 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
+      GROQ_API_KEY: ${GROQ_API_KEY:-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}
       MODEL_PATH: /app/models/chexnet.pth
       SIMULATION_MODE: "false"
       REDIS_URL: redis://redis:6379/0
+      SUPABASE_URL: ${SUPABASE_URL:-https://yykqafwozfpropcbuqjm.supabase.co}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      DEFAULT_SUPER_ADMIN_EMAIL: ${DEFAULT_SUPER_ADMIN_EMAIL:-admin@lunadx.com}
+      DEFAULT_SUPER_ADMIN_PASSWORD: ${DEFAULT_SUPER_ADMIN_PASSWORD:-admin123}
+      DEFAULT_SUPER_ADMIN_FULL_NAME: ${DEFAULT_SUPER_ADMIN_FULL_NAME:-LunaDX Administrator}
+      IOTEC_CLIENT_ID: ${IOTEC_CLIENT_ID:-pay-01a0b4d5-9ee8-7489-a2a0-917d7e7dc30d}
+      IOTEC_CLIENT_SECRET: ${IOTEC_CLIENT_SECRET:-}
+      IOTEC_WALLET_ID: ${IOTEC_WALLET_ID:-01a0b4d5-9f92-70cf-aa3d-f09ae93aff07}
+      IOTEC_GRANT_TYPE: ${IOTEC_GRANT_TYPE:-client_credentials}
+      IOTEC_AUTH_URL: ${IOTEC_AUTH_URL:-https://id.iotec.io/connect/token}
+      IOTEC_API_BASE: ${IOTEC_API_BASE:-https://pay.iotec.io/api}
     ports:
       - "8000:8000"
     volumes:
@@ -67,6 +79,9 @@ services:
       - "8080:80"
     environment:
       VITE_API_URL: http://localhost:8000
+      VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-https://yykqafwozfpropcbuqjm.supabase.co}
+      VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID:-yykqafwozfpropcbuqjm}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:-sb_publishable_ExSGmHmFwNDOOdd_c-RaLw_dzKY8kH6}
     depends_on:
       backend:
         condition: service_healthy

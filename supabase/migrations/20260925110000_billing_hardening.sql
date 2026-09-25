@@ -82,6 +82,30 @@ $$;
 UPDATE public.hospitals SET subscription_expires_at = now() + interval '14 days'
 WHERE subscription_status = 'trial' AND subscription_expires_at IS NULL;
 
+-- ── Approval activates the hospital's accounts ─────────────────────────────
+-- The hospital admin's profile is created inactive at registration and the
+-- app blocks inactive profiles, so approval must activate them.
+CREATE OR REPLACE FUNCTION public.activate_profiles_on_approval()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NEW.status = 'approved' AND OLD.status IS DISTINCT FROM 'approved' THEN
+    UPDATE public.profiles SET is_active = true WHERE hospital_id = NEW.id AND is_active = false;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_activate_profiles_on_approval ON public.hospitals;
+CREATE TRIGGER trg_activate_profiles_on_approval
+AFTER UPDATE OF status ON public.hospitals
+FOR EACH ROW EXECUTE FUNCTION public.activate_profiles_on_approval();
+
+UPDATE public.profiles p SET is_active = true
+FROM public.hospitals h, public.user_roles r
+WHERE p.hospital_id = h.id AND h.status = 'approved'
+  AND r.user_id = p.id AND r.role = 'hospital_admin'
+  AND p.is_active = false;
+
 -- ── Payments table constraints ─────────────────────────────────────────────
 ALTER TABLE public.payments ALTER COLUMN updated_at SET DEFAULT now();
 
@@ -177,6 +201,7 @@ $$;
 
 REVOKE ALL ON FUNCTION public.guard_hospital_update() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.guard_profile_update() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.activate_profiles_on_approval() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.activate_subscription(uuid) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.expire_subscriptions() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.activate_subscription(uuid) TO service_role;

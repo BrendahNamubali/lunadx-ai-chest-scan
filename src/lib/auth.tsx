@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -32,6 +32,7 @@ interface AuthState {
   role: AppRole | null;
   hospital: Hospital | null;
   fullName: string | null;
+  isActive: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
@@ -45,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [fullName, setFullName] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(false);
   const [loading, setLoading] = useState(true);
   const loadedUid = useRef<string | undefined>(undefined);
 
@@ -53,11 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setRole(null);
       setHospital(null);
       setFullName(null);
+      setIsActive(false);
       return;
     }
     const [{ data: roleRows }, { data: profile }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", uid),
-      supabase.from("profiles").select("full_name, hospital_id").eq("id", uid).maybeSingle(),
+      supabase.from("profiles").select("full_name, hospital_id, is_active").eq("id", uid).maybeSingle(),
     ]);
     const roles = (roleRows ?? []).map((r) => r.role as AppRole);
     const resolved: AppRole | null = roles.includes("super_admin")
@@ -69,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           : null;
     setRole(resolved);
     setFullName(profile?.full_name ?? null);
+    setIsActive(profile?.is_active ?? false);
     if (profile?.hospital_id) {
       const { data: h } = await supabase
         .from("hospitals")
@@ -102,17 +106,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // loadContext only touches state setters, so a stable reference is safe.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const refresh = useCallback(async () => {
+    const { data } = await supabase.auth.getUser();
+    await loadContext(data.user?.id);
+  }, []);
+
   const value: AuthState = {
     session,
     user: session?.user ?? null,
     role,
     hospital,
     fullName,
+    isActive,
     loading,
-    refresh: async () => {
-      const { data } = await supabase.auth.getUser();
-      await loadContext(data.user?.id);
-    },
+    refresh,
     signIn: async (email, password) => {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
       if (error) return { error: error.message };
@@ -122,6 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut();
       setRole(null);
       setHospital(null);
+      setIsActive(false);
     },
   };
 
@@ -143,6 +153,22 @@ export function dashboardPathFor(role: AppRole | null) {
 
 export function hasActiveSubscription(hospital: Hospital | null) {
   return !!hospital && (hospital.subscription_status === "trial" || hospital.subscription_status === "active");
+}
+
+export type AccessBlock = "no_role" | "no_hospital" | "pending" | "rejected" | "suspended" | "inactive" | "expired";
+
+/**
+ * Why a signed-in user may not enter the workspace, or null if they may.
+ * Fails closed: a hospital user whose hospital could not be loaded is blocked.
+ */
+export function accessBlock(role: AppRole | null, hospital: Hospital | null, isActive: boolean): AccessBlock | null {
+  if (!role) return "no_role";
+  if (role === "super_admin") return null;
+  if (!hospital) return "no_hospital";
+  if (hospital.status !== "approved") return hospital.status;
+  if (!isActive) return "inactive";
+  if (role === "clinician" && !hasActiveSubscription(hospital)) return "expired";
+  return null;
 }
 
 export const PLAN_LABELS: Record<string, string> = {

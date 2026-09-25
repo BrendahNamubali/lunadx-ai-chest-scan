@@ -43,8 +43,14 @@ export default function HospitalRegisterPage() {
           <h1 className="text-xl font-bold text-foreground mb-2">Registration submitted</h1>
           <p className="text-sm text-muted-foreground mb-6">
             Your hospital registration has been submitted. LunaDX will review your application and notify you once approved.
+            You can sign in any time to check your status. Your {TRIAL_DAYS}-day free trial starts on approval.
           </p>
-          <Button className="w-full" onClick={() => navigate("/login")}>Back to sign in</Button>
+          <Button
+            className="w-full"
+            onClick={() => navigate(`/login?registered=1&email=${encodeURIComponent(form.email.trim().toLowerCase())}`)}
+          >
+            Sign in to track your application
+          </Button>
         </div>
       </div>
     );

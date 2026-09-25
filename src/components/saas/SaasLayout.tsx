@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet, Navigate, useNavigate } from "react-router-dom";
 import { Shield, LogOut, Building2, LayoutDashboard, Users, CreditCard, Upload, BadgeCheck, Loader2, ShieldCheck, FileText } from "lucide-react";
-import { useAuth, dashboardPathFor, hasActiveSubscription, type AppRole } from "@/lib/auth";
+import { useAuth, accessBlock, dashboardPathFor, hasActiveSubscription, type AppRole } from "@/lib/auth";
 import LunaLogo from "@/components/LunaLogo";
 
 const NAV: Record<AppRole, { to: string; label: string; icon: typeof Shield }[]> = {
@@ -24,7 +24,7 @@ const NAV: Record<AppRole, { to: string; label: string; icon: typeof Shield }[]>
 };
 
 export function SaasLayout({ allow }: { allow: AppRole[] }) {
-  const { session, role, loading, fullName, hospital, signOut } = useAuth();
+  const { session, role, loading, fullName, hospital, isActive, signOut } = useAuth();
   const navigate = useNavigate();
 
   if (loading) {
@@ -35,14 +35,8 @@ export function SaasLayout({ allow }: { allow: AppRole[] }) {
     );
   }
   if (!session) return <Navigate to="/login" replace />;
-  if (!role) return <Navigate to="/pending-approval" replace />;
+  if (!role || accessBlock(role, hospital, isActive)) return <Navigate to="/pending-approval" replace />;
   if (!allow.includes(role)) return <Navigate to={dashboardPathFor(role)} replace />;
-  if (role !== "super_admin" && hospital && hospital.status !== "approved") {
-    return <Navigate to="/pending-approval" replace />;
-  }
-  if (role === "clinician" && !hasActiveSubscription(hospital)) {
-    return <Navigate to="/pending-approval" replace />;
-  }
 
   const items = NAV[role];
   const expiresAt = hospital?.subscription_expires_at ? new Date(hospital.subscription_expires_at) : null;

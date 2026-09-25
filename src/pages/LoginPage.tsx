@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AlertCircle, Building2, CheckCircle2, Loader2 } from "lucide-react";
 import { login } from "@/lib/store";
-import { useAuth, dashboardPathFor } from "@/lib/auth";
+import { useAuth, accessBlock, dashboardPathFor } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,16 +11,20 @@ import LunaLogo from "@/components/LunaLogo";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { session, role, loading, signIn } = useAuth();
+  const { session, role, hospital, isActive, loading, signIn } = useAuth();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const [loginEmail, setLoginEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const justRegistered = searchParams.get("registered") === "1";
+  const [loginEmail, setLoginEmail] = useState(searchParams.get("email") ?? "");
   const [loginPassword, setLoginPassword] = useState("");
 
   useEffect(() => {
-    if (!loading && session) navigate(role ? dashboardPathFor(role) : "/pending-approval", { replace: true });
-  }, [loading, session, role, navigate]);
+    if (loading || !session) return;
+    const blocked = accessBlock(role, hospital, isActive);
+    navigate(role && !blocked ? dashboardPathFor(role) : "/pending-approval", { replace: true });
+  }, [loading, session, role, hospital, isActive, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +70,13 @@ export default function LoginPage() {
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Register Hospital</TabsTrigger>
               </TabsList>
+
+              {justRegistered && !error && (
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/5 text-foreground text-sm mb-4">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-primary" />
+                  Registration submitted. Sign in with the admin password you chose to track your approval.
+                </div>
+              )}
 
               {error && (
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/5 text-destructive text-sm mb-4">

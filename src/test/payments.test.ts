@@ -40,7 +40,7 @@ describe("formatPlanPrice", () => {
   const [basic, , enterprise] = FALLBACK_PLANS;
 
   it("formats both currencies", () => {
-    expect(formatPlanPrice(basic, "UGX")).toBe("UGX 750,000");
+    expect(formatPlanPrice(basic, "UGX")).toBe("UGX 150,000");
     expect(formatPlanPrice(basic, "USD")).toBe("$199");
   });
 

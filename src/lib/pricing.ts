@@ -22,12 +22,12 @@ export interface Plan {
 
 export const TRIAL_DAYS = 14;
 
-/** Shown if the plans table can't be reached (e.g. landing page offline). Mirrors the seeded plans. */
+/** Shown if the plans table can't be reached (e.g. landing page offline). Keep in sync with subscription_plans. */
 export const FALLBACK_PLANS: Plan[] = [
   {
     id: "basic", slug: "basic", name: "Basic Hospital Plan",
     description: "For single facilities getting started with AI-assisted screening.",
-    price_monthly_cents: 19900, price_ugx: 750000, currency: "USD",
+    price_monthly_cents: 19900, price_ugx: 150000, currency: "USD",
     max_clinicians: 3, max_scans_per_month: 500,
     features: ["1 Hospital Admin", "3 Clinician accounts", "Chest X-ray analysis access", "Standard support"],
     is_active: true, sort_order: 1,
@@ -35,7 +35,7 @@ export const FALLBACK_PLANS: Plan[] = [
   {
     id: "professional", slug: "professional", name: "Professional Plan",
     description: "For busy facilities with larger clinical teams.",
-    price_monthly_cents: 49900, price_ugx: 1850000, currency: "USD",
+    price_monthly_cents: 49900, price_ugx: 244000, currency: "USD",
     max_clinicians: 10, max_scans_per_month: 2500,
     features: ["1 Hospital Admin", "10 Clinician accounts", "Higher scan limits", "Priority support", "Advanced analytics"],
     is_active: true, sort_order: 2,

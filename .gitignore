@@ -16,6 +16,9 @@ dist-ssr
 backend/.env
 backend/.env.production
 
+# Supabase CLI local state
+supabase/.temp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

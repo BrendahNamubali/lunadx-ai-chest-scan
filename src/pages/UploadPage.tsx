@@ -375,7 +375,7 @@ export default function UploadPage() {
         </Button>
       </div>
 
-      <AnimatePresence>{analyzing && <AIAnalysisLoader screeningMode={screeningMode} />}</AnimatePresence>
+      <AnimatePresence>{analyzing && <AIAnalysisLoader />}</AnimatePresence>
     </div>
   );
 }

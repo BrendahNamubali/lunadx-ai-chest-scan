@@ -90,6 +90,7 @@ export interface AIAnalysisResponse {
   tb_probability: number;
   heatmap_overlay_url: string | null;
   ai_summary: string;
+  [key: string]: unknown;
 }
 
 // ── Keys ───────────────────────────────────────────────

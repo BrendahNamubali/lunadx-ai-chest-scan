@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const BACKEND =
   import.meta.env.VITE_BACKEND_URL?.replace(/\/$/, "") ||
-  "http://127.0.0.1:8000";
+  (import.meta.env.DEV ? "http://127.0.0.1:8000" : "https://breekie-lunadx-backend.hf.space");
 
 /**
  * The local demo workspace (hardcoded accounts, simulated AI results) is only
@@ -545,10 +545,11 @@ async function analyzeWithBackend(
   if (clinicalNotes) fd.append("clinical_notes", clinicalNotes);
   fd.append("view_position", viewPosition || "PA");
   fd.append("screening_type", mode);
+  fd.append("analysis_type", mode === "tuberculosis" ? "tb" : "pneumonia");
 
   let res: Response;
   try {
-    res = await fetch(`${BACKEND}/analyze`, {
+    res = await fetch(`${BACKEND}/chexpert`, {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}` },
       body: fd,

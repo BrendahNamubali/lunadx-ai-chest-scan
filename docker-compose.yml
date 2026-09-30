@@ -78,6 +78,7 @@ services:
         VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-https://yykqafwozfpropcbuqjm.supabase.co}
         VITE_SUPABASE_PROJECT_ID: ${VITE_SUPABASE_PROJECT_ID:-yykqafwozfpropcbuqjm}
         VITE_SUPABASE_PUBLISHABLE_KEY: ${VITE_SUPABASE_PUBLISHABLE_KEY:-sb_publishable_ExSGmHmFwNDOOdd_c-RaLw_dzKY8kH6}
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-/api}
     container_name: lunadx_frontend
     ports:
       - "8080:80"
